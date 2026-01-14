@@ -23,11 +23,12 @@ class OrderController extends Controller
      * Display a listing of orders.
      */
     public function index(Request $request)
-    {
+    { 
         $query = Order::with(['customer', 'items', 'payments']);
 
         // Filter by Status
-        if ($request->has('status')) {
+        // Filter by Status
+        if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
 
@@ -44,7 +45,6 @@ class OrderController extends Controller
         }
 
         $orders = $query->latest()->paginate($request->input('per_page', 15));
-
         return OrderResource::collection($orders);
     }
 

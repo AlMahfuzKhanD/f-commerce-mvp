@@ -8,7 +8,7 @@
         </div>
 
         <div class="bg-white rounded-lg shadow">
-            <DataTable :headers="headers" :items="store.products" :actions="true">
+            <DataTable :headers="headers" :items="store.products || []" :actions="true">
                 <template #actions="{ item }">
                     <button @click="openModal(item)" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
                     <button @click="store.deleteProduct(item.id)" class="text-red-600 hover:text-red-900">Delete</button>

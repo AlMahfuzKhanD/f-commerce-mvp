@@ -41,21 +41,40 @@ class AuthService
      */
     public function register(array $data): array
     {
-        $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'password' => Hash::make($data['password']),
-            // 'tenant_id' will be handled by TenantMiddleware or default for now
-            // For Sprint 0, we might need to set it or allow null if not strict yet
-        ]);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            // 1. Create Tenant
+            $tenant = \App\Models\Tenant::create([
+                'name' => $data['company_name'],
+                'slug' => \Illuminate\Support\Str::slug($data['company_name']),
+                // Add defaults for currency/timezone if needed
+            ]);
 
-        // Automatically login
-        $token = $user->createToken('auth_token')->plainTextToken;
+            // 2. Create Owner Role for this Tenant
+            $ownerRole = \App\Models\Role::create([
+                'tenant_id' => $tenant->id,
+                'name'      => 'Owner',
+            ]);
 
-        return [
-            'user'  => $user,
-            'token' => $token,
-        ];
+            // 3. Create User linked to Tenant
+            $user = User::create([
+                'name'      => $data['name'],
+                'email'     => $data['email'],
+                'password'  => Hash::make($data['password']),
+                'tenant_id' => $tenant->id,
+            ]);
+
+            // 4. Assign Owner Role
+            $user->assignRole($ownerRole);
+
+            // 5. Generate Token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return [
+                'user'  => $user,
+                'token' => $token,
+                'tenant' => $tenant,
+            ];
+        });
     }
 
     /**

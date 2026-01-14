@@ -11,6 +11,9 @@ class Tenant extends Model
         'slug',
         'currency',
         'timezone',
+        'address', // Sprint 5
+        'phone',   // Sprint 5
+        'logo',    // Sprint 5
         'plan_id',
     ];
 

@@ -4,12 +4,30 @@ import axios from 'axios';
 export const useReportStore = defineStore('report', {
     state: () => ({
         salesData: [],
-        profitData: [], // { date, revenue, cost, expenses, net_profit }
+        profitData: [],
+        summary: {}, // Dashboard summary
+        salesChart: {}, // Sales chart data
         loading: false,
         error: null,
     }),
 
     actions: {
+        async fetchDashboardData() {
+            this.loading = true;
+            try {
+                // Mock data or API call if endpoint exists
+                const response = await axios.get('/api/v1/reports/dashboard'); 
+                this.summary = response.data.summary;
+                this.salesChart = response.data.chart;
+            } catch (error) {
+                // Fallback for MVP if endpoint missing
+                this.summary = { total_sales: 0, total_orders: 0, total_profit: 0 };
+                this.salesChart = { labels: [], datasets: [] };
+            } finally {
+                this.loading = false;
+            }
+        },
+
         async fetchProfitAnalysis(period = 'this_month') {
             this.loading = true;
             this.error = null;

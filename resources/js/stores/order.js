@@ -15,8 +15,10 @@ export const useOrderStore = defineStore('order', {
             this.loading = true;
             try {
                 const response = await axios.get('/api/v1/orders', { params });
-                this.orders = response.data.data;
-                this.pagination = response.data.meta || {};
+                // Check if response is wrapped in 'data' (Laravel Resource standard)
+                const responseData = response.data;
+                this.orders = Array.isArray(responseData.data) ? responseData.data : (Array.isArray(responseData) ? responseData : []);
+                this.pagination = responseData.meta || {};
             } catch (error) {
                 this.error = error.response?.data?.message || 'Error fetching orders';
             } finally {

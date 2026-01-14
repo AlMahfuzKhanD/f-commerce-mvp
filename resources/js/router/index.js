@@ -1,6 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../pages/auth/Login.vue';
+import DashboardLayout from '../layouts/DashboardLayout.vue';
 import Dashboard from '../pages/Dashboard.vue';
+
+// Placeholder Views (To be implemented)
+const Products = { template: '<div>Products Page</div>' };
+const Customers = { template: '<div>Customers Page</div>' };
+const Orders = { template: '<div>Orders Page</div>' };
 
 const routes = [
     {
@@ -11,11 +17,40 @@ const routes = [
     },
     {
         path: '/',
-        name: 'Dashboard',
-        component: Dashboard,
-        meta: { requiresAuth: true }
+        component: DashboardLayout,
+        meta: { requiresAuth: true },
+        children: [
+            {
+                path: '',
+                redirect: '/dashboard'
+            },
+            {
+                path: 'dashboard',
+                name: 'Dashboard',
+                component: Dashboard
+            },
+            {
+                path: 'products',
+                name: 'Products',
+                component: () => import('../pages/products/Index.vue') // Lazy load
+            },
+            {
+                path: 'customers',
+                name: 'Customers',
+                component: () => import('../pages/customers/Index.vue') // Lazy load
+            },
+            {
+                path: 'orders',
+                name: 'Orders',
+                component: () => import('../pages/orders/Index.vue')
+            },
+            {
+                path: 'orders/create',
+                name: 'CreateOrder',
+                component: () => import('../pages/orders/Create.vue')
+            }
+        ]
     },
-    // Catch-all 404
     {
         path: '/:pathMatch(.*)*',
         redirect: '/'
@@ -27,9 +62,8 @@ const router = createRouter({
     routes,
 });
 
-// Navigation Guard (Basic placeholder)
 router.beforeEach((to, from, next) => {
-    const isAuthenticated = localStorage.getItem('token'); // Simplistic check for now
+    const isAuthenticated = localStorage.getItem('token');
 
     if (to.meta.requiresAuth && !isAuthenticated) {
         next({ name: 'Login' });

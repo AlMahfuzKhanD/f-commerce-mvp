@@ -42,6 +42,13 @@ Route::prefix('v1')->group(function () {
         // Protected Profit Report
         Route::middleware('check_permission:profit')->get('reports/profit', [\App\Http\Controllers\Api\v1\ReportController::class, 'profit']);
 
+        // Sourcing
+        Route::apiResource('suppliers', \App\Http\Controllers\Api\v1\SupplierController::class);
+        Route::apiResource('purchases', \App\Http\Controllers\Api\v1\PurchaseController::class);
+
+        // Operations
+        Route::apiResource('expenses', \App\Http\Controllers\Api\v1\ExpenseController::class);
+
         // Settings & Profile
         Route::get('settings', [\App\Http\Controllers\Api\v1\SettingsController::class, 'show']);
         Route::put('settings', [\App\Http\Controllers\Api\v1\SettingsController::class, 'update']);

@@ -8,12 +8,21 @@
         </div>
 
         <div class="bg-white rounded-lg shadow">
-            <DataTable :headers="headers" :items="store.products || []" :actions="true">
+            <ServerDataTable
+                :headers="headers"
+                :items="store.products || []"
+                :meta="store.pagination"
+                :loading="store.loading"
+                :actions="true"
+                v-model:search="search"
+                @update:search="handleSearch"
+                @update:page="handlePageChange"
+            >
                 <template #actions="{ item }">
-                    <button @click="openModal(item)" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                    <button @click="store.deleteProduct(item.id)" class="text-red-600 hover:text-red-900">Delete</button>
+                    <button @click="openModal(item)" class="text-indigo-600 hover:text-indigo-900 mr-3 border border-indigo-600 rounded px-2 text-xs">Edit</button>
+                    <button @click="confirmDelete(item.id)" class="text-red-600 hover:text-red-900 border border-red-600 rounded px-2 text-xs">Delete</button>
                 </template>
-            </DataTable>
+            </ServerDataTable>
         </div>
 
         <!-- Product Modal -->
@@ -65,13 +74,14 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import { useProductStore } from '../../stores/product';
-import DataTable from '../../components/ui/DataTable.vue';
+import ServerDataTable from '../../components/ui/ServerDataTable.vue';
 import Modal from '../../components/ui/Modal.vue';
 
 const store = useProductStore();
 const showModal = ref(false);
 const isEditing = ref(false);
 const errors = ref(null);
+const search = ref('');
 
 const headers = [
     { key: 'name', label: 'Name' },
@@ -89,9 +99,28 @@ const form = reactive({
     base_price: 0
 });
 
+const fetchData = (page = 1) => {
+    store.fetchProducts({
+        page,
+        search: search.value
+    });
+};
+
 onMounted(() => {
-    store.fetchProducts();
+    fetchData();
 });
+
+let timeout = null;
+const handleSearch = () => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => {
+        fetchData(1);
+    }, 300);
+};
+
+const handlePageChange = (page) => {
+    fetchData(page);
+};
 
 const openModal = (item = null) => {
     errors.value = null;
@@ -113,12 +142,20 @@ const saveProduct = async () => {
             await store.createProduct(form);
         }
         showModal.value = false;
+        fetchData(store.pagination.current_page || 1);
     } catch (error) {
         if (error.response && error.response.status === 422) {
              errors.value = Object.values(error.response.data.errors).flat().join(', ');
         } else {
              errors.value = 'An error occurred.';
         }
+    }
+};
+
+const confirmDelete = async (id) => {
+    if(confirm('Are you sure?')) {
+        await store.deleteProduct(id);
+        fetchData(store.pagination.current_page || 1);
     }
 };
 </script>

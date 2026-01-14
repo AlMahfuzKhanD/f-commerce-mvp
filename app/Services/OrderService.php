@@ -72,8 +72,8 @@ class OrderService
                 'total_amount' => $total,
                 
                 // For MVP metrics
-                'cost_amount' => 0, // Should be sum of item costs
-                'profit_amount' => 0, // Total - Cost
+                'cost_amount' => collect($itemsData)->sum(fn($i) => $i['cost_price'] * $i['quantity']),
+                'profit_amount' => $total - collect($itemsData)->sum(fn($i) => $i['cost_price'] * $i['quantity']),
             ]);
 
             // 3. Create Items

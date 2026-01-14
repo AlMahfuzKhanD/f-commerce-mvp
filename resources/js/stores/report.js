@@ -3,29 +3,41 @@ import axios from 'axios';
 
 export const useReportStore = defineStore('report', {
     state: () => ({
-        summary: {
-            total_sales: 0,
-            total_orders: 0,
-            total_profit: 0
-        },
-        salesChart: [],
+        salesData: [],
+        profitData: [], // { date, revenue, cost, expenses, net_profit }
         loading: false,
         error: null,
     }),
 
     actions: {
-        async fetchDashboardData() {
+        async fetchProfitAnalysis(period = 'this_month') {
             this.loading = true;
-            try {
-                // Fetch Summary Cards
-                const summaryRes = await axios.get('/api/v1/analytics/summary');
-                this.summary = summaryRes.data;
+            this.error = null;
+            
+            // Simple date range helper
+            let start_date, end_date;
+            const today = new Date();
+            
+            if (period === 'this_month') {
+                start_date = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().substring(0, 10);
+                end_date = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().substring(0, 10);
+            } else if (period === 'last_month') {
+                 start_date = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().substring(0, 10);
+                 end_date = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().substring(0, 10);
+            } else {
+                 // Default last 30 days
+                 const prior = new Date(new Date().setDate(today.getDate() - 30));
+                 start_date = prior.toISOString().substring(0, 10);
+                 end_date = today.toISOString().substring(0, 10);
+            }
 
-                // Fetch Sales Chart Data
-                const salesRes = await axios.get('/api/v1/reports/sales');
-                this.salesChart = salesRes.data;
+            try {
+                const response = await axios.get('/api/v1/reports/profit', {
+                    params: { start_date, end_date }
+                });
+                this.profitData = response.data.data;
             } catch (error) {
-                this.error = 'Failed to load dashboard data';
+                this.error = error.response?.data?.message || 'Failed to load report';
             } finally {
                 this.loading = false;
             }

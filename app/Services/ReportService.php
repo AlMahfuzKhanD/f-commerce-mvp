@@ -42,11 +42,43 @@ class ReportService
      */
     public function getProfitAnalysis($startDate, $endDate)
     {
-        return Order::selectRaw('DATE(created_at) as date, SUM(total_amount) as revenue, SUM(cost_amount) as cost, SUM(profit_amount) as profit')
+        $orders = Order::selectRaw('DATE(created_at) as date, SUM(total_amount) as revenue, SUM(cost_amount) as cost, SUM(profit_amount) as gross_profit')
             ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', '!=', 'cancelled')
             ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+            ->get()
+            ->keyBy('date');
+
+        $expenses = \App\Models\Expense::selectRaw('DATE(expense_date) as date, SUM(amount) as amount')
+            ->whereBetween('expense_date', [$startDate, $endDate])
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        // Merge dates
+        $dates = $orders->keys()->merge($expenses->keys())->unique()->sort();
+
+        $report = $dates->map(function ($date) use ($orders, $expenses) {
+            $orderData = $orders->get($date);
+            $expenseData = $expenses->get($date);
+
+            $revenue = $orderData ? $orderData->revenue : 0;
+            $cost = $orderData ? $orderData->cost : 0;
+            $grossProfit = $orderData ? $orderData->gross_profit : 0;
+            $expense = $expenseData ? $expenseData->amount : 0;
+            $netProfit = $grossProfit - $expense;
+
+            return [
+                'date' => $date,
+                'revenue' => $revenue,
+                'cost' => $cost,
+                'gross_profit' => $grossProfit,
+                'expenses' => $expense,
+                'net_profit' => $netProfit
+            ];
+        });
+
+        return $report->values();
     }
 
     /**

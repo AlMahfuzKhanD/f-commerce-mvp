@@ -17,8 +17,34 @@
                 <router-link to="/customers" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">👥</span> Customers
                 </router-link>
+                
+                <div class="px-4 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Sourcing
+                </div>
+                <router-link to="/suppliers" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">🏭</span> Suppliers
+                </router-link>
+                <router-link to="/purchases" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">🛒</span> Purchases
+                </router-link>
+                <router-link to="/expenses" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">💸</span> Expenses
+                </router-link>
+                
+                <div class="px-4 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Analytics
+                </div>
                 <router-link to="/reports" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">📈</span> Reports
+                </router-link>
+                
+                <div class="pt-4 mt-4 border-t border-gray-700"></div>
+
+                <router-link to="/profile" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">👤</span> Profile
+                </router-link>
+                <router-link to="/settings" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">⚙️</span> Settings
                 </router-link>
             </nav>
         </div>

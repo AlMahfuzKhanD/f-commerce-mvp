@@ -105,4 +105,45 @@ class OrderController extends Controller
 
         return new OrderResource($order->fresh());
     }
+
+    /**
+     * Update the specified resource in storage.
+     * Allows updating header details like customer, notes, etc.
+     */
+    public function update(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'order_date' => 'sometimes|date',
+            // Add other updatable fields here, e.g. customer_id, notes
+        ]);
+
+        $order = Order::findOrFail($id);
+        $order->update($validated);
+
+        return new OrderResource($order);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        // Optional: Revert stock if order was reserved but not shipped/delivered?
+        // Sourcing logic handles purchase stock in. Order logic handles stock out.
+        // If we delete an order, we should increment stock back if it was decremented.
+        // `OrderService` decrements stock on creation.
+        
+        $order = Order::with('items')->findOrFail($id);
+        
+        foreach ($order->items as $item) {
+             $product = \App\Models\Product::find($item->product_id);
+             if ($product) {
+                 $product->increment('stock_quantity', $item->quantity);
+             }
+        }
+
+        $order->delete();
+
+        return response()->json(['message' => 'Order deleted successfully']);
+    }
 }

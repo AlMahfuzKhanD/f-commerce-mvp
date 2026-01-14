@@ -63,6 +63,41 @@ const routes = [
                 path: 'orders/create',
                 name: 'CreateOrder',
                 component: () => import('../pages/orders/Create.vue')
+            },
+            {
+                path: 'profile',
+                name: 'Profile',
+                component: () => import('../pages/Profile.vue')
+            },
+            {
+                path: 'settings',
+                name: 'Settings',
+                component: () => import('../pages/Settings.vue')
+            },
+            {
+                path: 'suppliers',
+                name: 'Suppliers',
+                component: () => import('../pages/suppliers/Index.vue')
+            },
+            {
+                path: 'purchases',
+                name: 'Purchases',
+                component: () => import('../pages/purchases/Index.vue')
+            },
+            {
+                path: 'purchases/create',
+                name: 'CreatePurchase',
+                component: () => import('../pages/purchases/Create.vue')
+            },
+            {
+                path: 'expenses',
+                name: 'Expenses',
+                component: () => import('../pages/expenses/Index.vue')
+            },
+            {
+                path: 'reports',
+                name: 'Reports',
+                component: () => import('../pages/reports/Index.vue')
             }
         ]
     },

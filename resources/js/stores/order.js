@@ -52,6 +52,25 @@ export const useOrderStore = defineStore('order', {
             } catch (error) {
                 throw error;
             }
+        },
+
+        async updateOrder(id, payload) {
+            try {
+                const response = await axios.put(`/api/v1/orders/${id}`, payload);
+                await this.fetchOrders();
+                return response.data;
+            } catch (error) {
+                throw error;
+            }
+        },
+
+        async deleteOrder(id) {
+            try {
+                await axios.delete(`/api/v1/orders/${id}`);
+                await this.fetchOrders();
+            } catch (error) {
+                throw error;
+            }
         }
     }
 });

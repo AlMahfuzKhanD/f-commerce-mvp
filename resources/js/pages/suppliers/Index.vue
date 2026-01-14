@@ -1,16 +1,16 @@
 <template>
     <div>
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-800">Customers</h2>
+            <h2 class="text-xl font-semibold text-gray-800">Suppliers</h2>
             <button @click="openModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                + Add Customer
+                + New Supplier
             </button>
         </div>
 
         <div class="bg-white rounded-lg shadow">
-            <ServerDataTable
-                :headers="headers"
-                :items="store.customers || []"
+            <ServerDataTable 
+                :headers="headers" 
+                :items="store.suppliers" 
                 :meta="store.pagination"
                 :loading="store.loading"
                 :actions="true"
@@ -19,43 +19,41 @@
                 @update:page="handlePageChange"
             >
                 <template #actions="{ item }">
-                     <button @click="openModal(item)" class="text-indigo-600 hover:text-indigo-900 mr-3 border border-indigo-600 rounded px-2 text-xs">Edit</button>
-                     <button @click="confirmDelete(item.id)" class="text-red-600 hover:text-red-900 border border-red-600 rounded px-2 text-xs">Delete</button>
+                    <button @click="openModal(item)" class="text-indigo-600 hover:text-indigo-900 mr-2 border border-indigo-600 rounded px-2 text-xs">Edit</button>
+                    <button @click="deleteSupplier(item.id)" class="text-red-600 hover:text-red-900 border border-red-600 rounded px-2 text-xs">Delete</button>
                 </template>
             </ServerDataTable>
         </div>
 
-        <CustomerModal v-model="showModal" :customer="selectedCustomer" @saved="refresh" />
+        <SupplierModal v-model="showModal" :supplier="selectedSupplier" @saved="refresh" />
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useCustomerStore } from '../../stores/customer';
+import { onMounted, ref } from 'vue';
+import { useSupplierStore } from '../../stores/supplier';
 import ServerDataTable from '../../components/ui/ServerDataTable.vue';
-import CustomerModal from '../../components/CustomerModal.vue';
+import SupplierModal from '../../components/SupplierModal.vue';
 
-const store = useCustomerStore();
+const store = useSupplierStore();
 const showModal = ref(false);
-const selectedCustomer = ref(null);
+const selectedSupplier = ref(null);
 const search = ref('');
 
 const headers = [
     { key: 'name', label: 'Name' },
     { key: 'phone', label: 'Phone' },
+    { key: 'email', label: 'Email' },
     { key: 'address', label: 'Address' },
+    { key: 'created_at', label: 'Added On' },
 ];
 
 const fetchData = (page = 1) => {
-    store.fetchCustomers({
+    store.fetchSuppliers({
         page,
         search: search.value
     });
 };
-
-onMounted(() => {
-    fetchData();
-});
 
 let timeout = null;
 const handleSearch = () => {
@@ -69,15 +67,19 @@ const handlePageChange = (page) => {
     fetchData(page);
 };
 
-const openModal = (customer = null) => {
-    selectedCustomer.value = customer;
+onMounted(() => {
+    fetchData();
+});
+
+const openModal = (supplier = null) => {
+    selectedSupplier.value = supplier;
     showModal.value = true;
 };
 
-const confirmDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this customer?')) {
-        await store.deleteCustomer(id);
-        refresh();
+const deleteSupplier = async (id) => {
+    if (confirm('Are you sure you want to delete this supplier?')) {
+        await store.deleteSupplier(id);
+        fetchData(store.pagination.current_page || 1);
     }
 };
 

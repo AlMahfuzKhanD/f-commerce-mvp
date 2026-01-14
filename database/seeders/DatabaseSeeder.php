@@ -15,11 +15,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Create a tenant first
+        $tenant = \App\Models\Tenant::create([
+            'name' => 'Test Tenant',
+            'slug' => 'test',
+        ]);
 
         User::factory()->create([
-            'name' => 'Test User',
+            'name' => 'Owner User',
             'email' => 'test@example.com',
+            'tenant_id' => $tenant->id,
         ]);
+
+        // Also run PermissionSeeder
+        $this->call(PermissionSeeder::class);
     }
 }

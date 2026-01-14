@@ -15,6 +15,7 @@ class OrderItem extends Model
         'tenant_id',
         'order_id',
         'product_id',
+        'product_name',
         'product_variant_id',
         'quantity',
         'selling_price',

@@ -24,6 +24,7 @@ class Order extends Model
         'cost_amount',
         'profit_amount',
         'payment_type',
+        'notes',
     ];
 
     public function customer()

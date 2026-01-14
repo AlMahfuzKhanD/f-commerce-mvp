@@ -35,14 +35,29 @@ const routes = [
                 component: () => import('../pages/products/Index.vue') // Lazy load
             },
             {
+                path: 'products/create',
+                name: 'CreateProduct',
+                component: () => import('../pages/products/Create.vue')
+            },
+            {
                 path: 'customers',
                 name: 'Customers',
                 component: () => import('../pages/customers/Index.vue') // Lazy load
             },
             {
+                path: 'customers/create',
+                name: 'CreateCustomer',
+                component: () => import('../pages/customers/Create.vue')
+            },
+            {
                 path: 'orders',
                 name: 'Orders',
                 component: () => import('../pages/orders/Index.vue')
+            },
+            {
+                path: 'orders/:id/invoice',
+                name: 'OrderInvoice',
+                component: () => import('../pages/orders/Invoice.vue')
             },
             {
                 path: 'orders/create',

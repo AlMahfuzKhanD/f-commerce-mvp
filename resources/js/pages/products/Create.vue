@@ -1,0 +1,107 @@
+<template>
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Add New Product</h2>
+            <router-link to="/products" class="text-indigo-600 hover:text-indigo-900">
+                &larr; Back to Products
+            </router-link>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <form @submit.prevent="saveProduct" class="space-y-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Product Name</label>
+                        <input v-model="form.name" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">SKU</label>
+                        <input v-model="form.sku" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                    </div>
+
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Stock Quantity</label>
+                        <input v-model.number="form.stock_quantity" type="number" required min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Cost Price</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">৳</span>
+                            </div>
+                            <input v-model.number="form.cost_price" type="number" min="0" step="0.01" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 sm:text-sm border-gray-300 rounded-md border p-2" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Selling Price</label>
+                         <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">৳</span>
+                            </div>
+                            <input v-model.number="form.base_price" type="number" required min="0" step="0.01" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 sm:text-sm border-gray-300 rounded-md border p-2" placeholder="0.00">
+                        </div>
+                    </div>
+
+                     <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                        <textarea v-model="form.description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"></textarea>
+                    </div>
+                </div>
+
+                <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded">
+                    {{ error }}
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <router-link to="/products" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancel
+                    </router-link>
+                    <button type="submit" :disabled="loading" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+                        {{ loading ? 'Saving...' : 'Save Product' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useProductStore } from '../../stores/product';
+
+const router = useRouter();
+const store = useProductStore();
+const loading = ref(false);
+const error = ref(null);
+
+const form = reactive({
+    name: '',
+    sku: '',
+    stock_quantity: 0,
+    base_price: 0,
+    cost_price: 0,
+    description: '',
+    is_active: true
+});
+
+const saveProduct = async () => {
+    loading.value = true;
+    error.value = null;
+    try {
+        await store.createProduct(form);
+        router.push({ name: 'Products' });
+    } catch (err) {
+        if (err.response && err.response.data && err.response.data.errors) {
+             error.value = Object.values(err.response.data.errors).flat().join(', ');
+        } else {
+             error.value = err.response?.data?.message || 'Failed to create product.';
+        }
+    } finally {
+        loading.value = false;
+    }
+};
+</script>

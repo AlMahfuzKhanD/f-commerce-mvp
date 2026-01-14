@@ -2,9 +2,9 @@
     <div>
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-semibold text-gray-800">Products</h2>
-            <button @click="openModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+            <router-link to="/products/create" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
                 + Add Product
-            </button>
+            </router-link>
         </div>
 
         <div class="bg-white rounded-lg shadow">

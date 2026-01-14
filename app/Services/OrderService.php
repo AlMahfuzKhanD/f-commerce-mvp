@@ -41,6 +41,12 @@ class OrderService
                     'selling_price' => $item['unit_price'],
                     'cost_price' => $product->cost_price, // Snapshot cost at moment of sale
                 ];
+                
+                // Inventory Management (Sprint 2)
+                if ($product->stock_quantity < $item['quantity']) {
+                    throw new \Exception("Insufficient stock for product: {$product->name}. Requested: {$item['quantity']}, Available: {$product->stock_quantity}");
+                }
+                $product->decrement('stock_quantity', $item['quantity']);
             }
 
             $delivery = $data['delivery_charge'] ?? 0;

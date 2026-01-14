@@ -46,7 +46,42 @@ class CustomerController extends Controller
      */
     public function show(string $id)
     {
-        $customer = Customer::findOrFail($id);
+        // Sprint 2: Include latest 5 orders
+        $customer = Customer::with(['orders' => function($query) {
+            $query->latest()->limit(5);
+        }])->findOrFail($id);
+        
         return new CustomerResource($customer);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(\App\Http\Requests\UpdateCustomerRequest $request, string $id)
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->update($request->validated());
+
+        return new CustomerResource($customer);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $customer = Customer::findOrFail($id);
+        
+        // Validation: Prevent deletion if has orders
+        if ($customer->orders()->exists()) {
+             return response()->json([
+                'message' => 'Cannot delete customer with existing orders.',
+                'error' => 'conflict_with_orders'
+             ], 409);
+        }
+
+        $customer->delete();
+
+        return response()->json(['message' => 'Customer deleted successfully.']);
     }
 }

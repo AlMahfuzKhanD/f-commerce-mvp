@@ -5,11 +5,12 @@ namespace App\Models;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
     /** @use HasFactory<\Database\Factories\ProductFactory> */
-    use HasFactory, BelongsToTenant;
+    use HasFactory, BelongsToTenant, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
@@ -17,6 +18,7 @@ class Product extends Model
         'sku',
         'base_price',
         'cost_price',
+        'stock_quantity',
         'is_active',
     ];
 

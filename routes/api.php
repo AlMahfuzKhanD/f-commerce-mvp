@@ -14,19 +14,20 @@ Route::prefix('v1')->group(function () {
             Route::get('me', [AuthController::class, 'me']);
             Route::post('logout', [AuthController::class, 'logout']);
 
-            // Products (Read-Only)
-            Route::get('products', [\App\Http\Controllers\Api\v1\ProductController::class, 'index']);
-            Route::get('products/{id}', [\App\Http\Controllers\Api\v1\ProductController::class, 'show']);
+            // Products
+            Route::apiResource('products', \App\Http\Controllers\Api\v1\ProductController::class);
 
             // Customers
-            Route::get('customers', [\App\Http\Controllers\Api\v1\CustomerController::class, 'index']);
-            Route::post('customers', [\App\Http\Controllers\Api\v1\CustomerController::class, 'store']);
-            Route::get('customers/{id}', [\App\Http\Controllers\Api\v1\CustomerController::class, 'show']);
+            Route::apiResource('customers', \App\Http\Controllers\Api\v1\CustomerController::class);
 
             // Orders
             Route::get('orders', [\App\Http\Controllers\Api\v1\OrderController::class, 'index']);
             Route::post('orders', [\App\Http\Controllers\Api\v1\OrderController::class, 'store']);
             Route::get('orders/{id}', [\App\Http\Controllers\Api\v1\OrderController::class, 'show']);
+            Route::post('orders/{id}/status', [\App\Http\Controllers\Api\v1\OrderController::class, 'updateStatus']); // Sprint 3
+            Route::get('orders/{id}/invoice', [\App\Http\Controllers\Api\v1\InvoiceController::class, 'show']); // Sprint 3
+            Route::get('orders/{id}/payments', [\App\Http\Controllers\Api\v1\PaymentController::class, 'index']); // Sprint 3
+            Route::post('orders/{id}/payments', [\App\Http\Controllers\Api\v1\PaymentController::class, 'store']); // Sprint 3
             // Route::put('orders/{id}', [\App\Http\Controllers\Api\v1\OrderController::class, 'update']);
             // Route::patch('orders/{id}/status', [\App\Http\Controllers\Api\v1\OrderController::class, 'updateStatus']);
         });

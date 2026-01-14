@@ -35,14 +35,40 @@ class ProductController extends Controller
     }
 
     /**
+     * Store a newly created resource in storage.
+     */
+    public function store(\App\Http\Requests\StoreProductRequest $request)
+    {
+        $product = Product::create($request->validated());
+        return new ProductResource($product);
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
         $product = Product::with('variants')->findOrFail($id);
-        
-        // TenantScope handles 404 if not in tenant
-
         return new ProductResource($product);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(\App\Http\Requests\UpdateProductRequest $request, string $id)
+    {
+        $product = Product::findOrFail($id);
+        $product->update($request->validated());
+        return new ProductResource($product);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $product = Product::findOrFail($id);
+        $product->delete(); // Soft delete
+        return response()->json(['message' => 'Product deleted successfully.']);
     }
 }

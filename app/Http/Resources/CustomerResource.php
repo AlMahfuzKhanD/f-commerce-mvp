@@ -15,6 +15,7 @@ class CustomerResource extends JsonResource
             'phone' => $this->phone,
             'address' => $this->address,
             'notes' => $this->notes,
+            'orders' => OrderResource::collection($this->whenLoaded('orders')),
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

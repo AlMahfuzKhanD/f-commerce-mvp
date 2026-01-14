@@ -24,6 +24,9 @@ class Order extends Model
         'cost_amount',
         'profit_amount',
         'payment_type',
+        'payment_status', // Sprint 3
+        'paid_amount',    // Sprint 3
+        'due_amount',     // Sprint 3
         'notes',
     ];
 
@@ -45,5 +48,15 @@ class Order extends Model
     public function events()
     {
         return $this->hasMany(OrderEvent::class);
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 }

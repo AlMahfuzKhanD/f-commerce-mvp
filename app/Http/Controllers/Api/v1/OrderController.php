@@ -66,4 +66,43 @@ class OrderController extends Controller
         $order = Order::with(['customer', 'items', 'events'])->findOrFail($id);
         return new OrderResource($order);
     }
+
+    /**
+     * Update order status.
+     * Sprint 3: Triggers invoice generation on confirmation.
+     */
+    public function updateStatus(Request $request, string $id, \App\Services\InvoiceService $invoiceService)
+    {
+        $request->validate([
+            'status' => 'required|string|in:pending,confirmed,shipped,delivered,cancelled'
+        ]);
+
+        $order = Order::findOrFail($id);
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
+
+        if ($oldStatus === $newStatus) {
+            return response()->json(['message' => 'Status is already ' . $newStatus]);
+        }
+
+        $order->update(['status' => $newStatus]);
+
+        // Log Event
+        $order->events()->create([
+            'tenant_id' => $order->tenant_id,
+            'event_type' => 'status_changed',
+            'meta' => [
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'changed_by' => $request->user()->id
+            ]
+        ]);
+
+        // Sprint 3: Auto-generate Invoice
+        if ($newStatus === 'confirmed') {
+            $invoiceService->generateInvoice($order);
+        }
+
+        return new OrderResource($order->fresh());
+    }
 }

@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->statefulApi();
         $middleware->alias([
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,

@@ -21,7 +21,7 @@ class ExpenseController extends Controller
         }
 
         // Category Filter
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
              $query->where('category', $request->category);
         }
 

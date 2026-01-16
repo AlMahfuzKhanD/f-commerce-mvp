@@ -17,4 +17,27 @@ class PermissionController extends Controller
             'grouped' => $grouped
         ]);
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'slug' => 'required|string|unique:permissions,slug',
+            'group' => 'required|string',
+            'description' => 'nullable|string'
+        ]);
+
+        $permission = \App\Models\Permission::create($validated);
+
+        return response()->json([
+            'message' => 'Permission created',
+            'data' => $permission
+        ], 201);
+    }
+
+    public function destroy(string $id)
+    {
+        $permission = \App\Models\Permission::findOrFail($id);
+        $permission->delete();
+        return response()->noContent();
+    }
 }

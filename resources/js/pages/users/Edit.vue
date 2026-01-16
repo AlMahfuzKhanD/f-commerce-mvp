@@ -26,6 +26,12 @@
                     <input v-model="form.password" type="password" minlength="8" class="block w-full border border-gray-300 rounded-md p-2">
                 </div>
 
+                <div class="mb-6 border-t pt-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Extra Permissions (Optional)</h3>
+                     <p class="text-xs text-gray-500 mb-3">Assign permissions directly to this user.</p>
+                    <PermissionSelector v-model="form.permissions" />
+                </div>
+
                 <div class="flex justify-end gap-3">
                     <router-link to="/users" class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">Cancel</router-link>
                     <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Update User</button>
@@ -40,6 +46,7 @@ import { reactive, ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter, useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
+import PermissionSelector from '../../components/ui/PermissionSelector.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -48,7 +55,8 @@ const form = reactive({
     name: '',
     email: '',
     role_id: '',
-    password: ''
+    password: '',
+    permissions: []
 });
 
 onMounted(async () => {
@@ -64,6 +72,8 @@ onMounted(async () => {
         form.name = user.name;
         form.email = user.email;
         form.role_id = user.role_id;
+        // The API returns 'direct_permissions' (array of IDs)
+        form.permissions = user.direct_permissions || [];
     } catch (error) {
         console.error('Error fetching data:', error);
     }

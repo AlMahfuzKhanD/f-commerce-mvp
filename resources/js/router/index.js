@@ -160,6 +160,36 @@ const routes = [
                 name: 'EditUser',
                 component: () => import('../pages/users/Edit.vue'),
                 meta: { permission: 'settings.update' }
+            },
+            {
+                path: 'roles',
+                name: 'Roles',
+                component: () => import('../pages/roles/Index.vue'),
+                meta: { permission: 'settings.update' }
+            },
+            {
+                path: 'roles/create',
+                name: 'CreateRole',
+                component: () => import('../pages/roles/Create.vue'),
+                meta: { permission: 'settings.update' }
+            },
+            {
+                path: 'roles/:id/edit',
+                name: 'EditRole',
+                component: () => import('../pages/roles/Edit.vue'),
+                meta: { permission: 'settings.update' }
+            },
+            {
+                path: 'permissions',
+                name: 'Permissions',
+                component: () => import('../pages/permissions/Index.vue'),
+                meta: { permission: 'settings.update' }
+            },
+            {
+                path: 'permissions/create',
+                name: 'CreatePermission',
+                component: () => import('../pages/permissions/Create.vue'),
+                meta: { permission: 'settings.update' }
             }
         ]
     },

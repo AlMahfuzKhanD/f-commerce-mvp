@@ -73,7 +73,7 @@ Route::prefix('v1')->group(function () {
         // Users & Roles
         Route::apiResource('users', \App\Http\Controllers\Api\v1\UserController::class);
         Route::apiResource('roles', \App\Http\Controllers\Api\v1\RoleController::class);
-        Route::get('permissions', [\App\Http\Controllers\Api\v1\PermissionController::class, 'index']);
+        Route::apiResource('permissions', \App\Http\Controllers\Api\v1\PermissionController::class);
     });
 
 

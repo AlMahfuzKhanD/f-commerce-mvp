@@ -46,9 +46,19 @@
                 <router-link to="/profile" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">👤</span> Profile
                 </router-link>
-                <router-link v-if="$can('product.view')" to="/attributes" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
-                    <span class="mr-3">🏷️</span> Attributes
+                <div v-if="$can('settings.view')" class="px-4 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    System
+                </div>
+                 <router-link v-if="$can('settings.view')" to="/users" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">👥</span> Users
                 </router-link>
+                <router-link v-if="$can('settings.update')" to="/roles" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">🛡️</span> Roles
+                </router-link>
+                 <router-link v-if="$can('settings.update')" to="/permissions" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">🔑</span> Permissions
+                </router-link>
+
                 <router-link v-if="$can('settings.view')" to="/settings" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">⚙️</span> Settings
                 </router-link>

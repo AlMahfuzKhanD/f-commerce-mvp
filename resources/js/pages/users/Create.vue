@@ -26,6 +26,12 @@
                     <input v-model="form.password" type="password" required minlength="8" class="block w-full border border-gray-300 rounded-md p-2">
                 </div>
 
+                <div class="mb-6 border-t pt-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Extra Permissions (Optional)</h3>
+                     <p class="text-xs text-gray-500 mb-3">These permissions will be added ON TOP of the selected Role's permissions.</p>
+                    <PermissionSelector v-model="form.permissions" />
+                </div>
+
                 <div class="flex justify-end gap-3">
                     <router-link to="/users" class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">Cancel</router-link>
                     <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Invite User</button>
@@ -40,6 +46,7 @@ import { reactive, ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import PermissionSelector from '../../components/ui/PermissionSelector.vue';
 
 const router = useRouter();
 const roles = ref([]);
@@ -47,7 +54,8 @@ const form = reactive({
     name: '',
     email: '',
     role_id: '',
-    password: ''
+    password: '',
+    permissions: []
 });
 
 onMounted(async () => {

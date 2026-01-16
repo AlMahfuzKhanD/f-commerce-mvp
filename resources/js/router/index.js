@@ -41,8 +41,15 @@ const routes = [
             },
             {
                 path: 'products/create',
-                name: 'CreateProduct',
-                component: () => import('../pages/products/Create.vue')
+                name: 'ProductsCreate',
+                component: () => import('../pages/products/Create.vue'),
+                meta: { title: 'Create Product' }
+            },
+            {
+                path: 'products/:id/edit',
+                name: 'ProductsEdit',
+                component: () => import('../pages/products/Edit.vue'),
+                meta: { title: 'Edit Product' }
             },
             {
                 path: 'customers',

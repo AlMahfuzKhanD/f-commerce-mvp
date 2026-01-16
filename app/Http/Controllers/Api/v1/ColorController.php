@@ -37,6 +37,10 @@ class ColorController extends Controller
 
     public function destroy(Color $color)
     {
+        if ($color->variants()->exists()) {
+            return response()->json(['message' => 'Cannot delete color. It is used by existing products.'], 422);
+        }
+
         $color->delete();
         return response()->noContent();
     }

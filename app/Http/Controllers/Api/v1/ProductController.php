@@ -105,7 +105,16 @@ class ProductController extends Controller
     public function destroy(string $id)
     {
         $product = Product::findOrFail($id);
-        $product->delete(); // Soft delete
-        return response()->json(['message' => 'Product deleted successfully.']);
+
+        if ($product->orderItems()->exists()) {
+            return response()->json(['message' => 'Cannot delete product. It has been used in orders.'], 422);
+        }
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($product) {
+            // Manually delete variants to ensure events/logic runs if any (though DB cascade exists)
+            $product->variants()->delete(); 
+            $product->delete();
+            return response()->json(['message' => 'Product deleted successfully.']);
+        });
     }
 }

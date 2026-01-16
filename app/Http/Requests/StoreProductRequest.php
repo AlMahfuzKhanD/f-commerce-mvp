@@ -27,23 +27,30 @@ class StoreProductRequest extends FormRequest
                 'nullable', 
                 'string', 
                 'max:100',
-                // Unique sku per tenant
+                // Unique sku per tenant in products table
                 Rule::unique('products')->where(function ($query) {
                     return $query->where('tenant_id', $this->user()->tenant_id);
-                })
+                }),
+                // Also unique in variants table
+                'unique:product_variants,sku'
             ],
             'base_price' => ['required', 'numeric', 'min:0'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'description' => ['nullable', 'string'],
             
             // Variant Validation
             'variants' => ['nullable', 'array'],
             'variants.*.size_id' => ['nullable', 'exists:sizes,id'],
             'variants.*.color_id' => ['nullable', 'exists:colors,id'],
-            'variants.*.sku' => ['nullable', 'string', 'distinct'], // distinct in array
-            'variants.*.stock_quantity' => ['required_with:variants', 'integer', 'min:0'],
-            'variants.*.extra_price' => ['nullable', 'numeric'],
+            'variants.*.sku' => [
+                'nullable', 
+                'string', 
+                'distinct', 
+                'unique:product_variants,sku', // unique in variants
+                'unique:products,sku' // unique in products
+            ], // distinct in array, unique in DB coverage
         ];
     }
 }

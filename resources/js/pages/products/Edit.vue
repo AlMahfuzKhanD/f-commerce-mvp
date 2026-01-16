@@ -1,14 +1,19 @@
 <template>
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Add New Product</h2>
+            <h2 class="text-2xl font-bold text-gray-800">Edit Product</h2>
             <router-link to="/products" class="text-indigo-600 hover:text-indigo-900">
                 &larr; Back to Products
             </router-link>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
+        <div v-if="initialLoading" class="text-center py-10">
+            <p>Loading product...</p>
+        </div>
+
+        <div v-else class="bg-white rounded-lg shadow p-6">
             <form @submit.prevent="saveProduct" class="space-y-6">
+                <!-- Same Form Structure as Create.vue -->
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Product Name</label>
@@ -77,7 +82,7 @@
                         Cancel
                     </router-link>
                     <button type="submit" :disabled="loading" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-                        {{ loading ? 'Saving...' : 'Save Product' }}
+                        {{ loading ? 'Updating...' : 'Update Product' }}
                     </button>
                 </div>
             </form>
@@ -87,18 +92,23 @@
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useProductStore } from '../../stores/product';
 import { useCategoryStore } from '../../stores/category';
 import VariantBuilder from '../../components/products/VariantBuilder.vue';
+import axios from 'axios';
+import toastr from 'toastr';
 
 const router = useRouter();
+const route = useRoute();
 const store = useProductStore();
 const categoryStore = useCategoryStore();
 const loading = ref(false);
+const initialLoading = ref(true);
 const error = ref(null);
 
 const form = reactive({
+    id: null,
     name: '',
     sku: '',
     stock_quantity: 0,
@@ -111,22 +121,47 @@ const form = reactive({
 });
 
 onMounted(async () => {
-    store.fetchProducts(); // Pre-load to avoid stale state? Not needed.
     await categoryStore.fetchCategories();
+    const productId = route.params.id;
+    if (productId) {
+        try {
+            const response = await window.axios.get(`/api/v1/products/${productId}`);
+            const product = response.data.data;
+            Object.assign(form, {
+                id: product.id,
+                name: product.name,
+                sku: product.sku,
+                stock_quantity: product.stock_quantity,
+                base_price: product.base_price,
+                cost_price: product.cost_price,
+                description: product.description,
+                category_id: product.category_id,
+                variants: product.variants.map(v => ({ ...v }))
+            });
+        } catch (err) {
+            error.value = "Failed to load product details.";
+            toastr.error("Failed to load product details");
+            console.error(err);
+        } finally {
+            initialLoading.value = false;
+        }
+    }
 });
 
 const saveProduct = async () => {
     loading.value = true;
     error.value = null;
     try {
-        await store.createProduct(form);
+        await store.updateProduct(form.id, form);
+        toastr.success('Product updated successfully');
         router.push({ name: 'Products' });
     } catch (err) {
         if (err.response && err.response.data && err.response.data.errors) {
              error.value = Object.values(err.response.data.errors).flat().join(', ');
         } else {
-             error.value = err.response?.data?.message || 'Failed to create product.';
+             error.value = err.response?.data?.message || 'Failed to update product.';
         }
+        toastr.error(error.value);
     } finally {
         loading.value = false;
     }

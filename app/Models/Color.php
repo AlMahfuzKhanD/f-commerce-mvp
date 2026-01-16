@@ -11,4 +11,9 @@ class Color extends Model
     use HasFactory, BelongsToTenant;
 
     protected $fillable = ['tenant_id', 'name', 'code'];
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
 }

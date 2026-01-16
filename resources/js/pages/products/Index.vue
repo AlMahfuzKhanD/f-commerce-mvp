@@ -19,55 +19,11 @@
                 @update:page="handlePageChange"
             >
                 <template #actions="{ item }">
-                    <button @click="openModal(item)" class="text-indigo-600 hover:text-indigo-900 mr-3 border border-indigo-600 rounded px-2 text-xs">Edit</button>
-                    <button @click="confirmDelete(item.id)" class="text-red-600 hover:text-red-900 border border-red-600 rounded px-2 text-xs">Delete</button>
+                    <router-link :to="{ name: 'ProductsEdit', params: { id: item.id } }" class="text-indigo-600 hover:text-indigo-900 mr-3 border border-indigo-600 rounded px-2 text-xs inline-block py-0.5">Edit</router-link>
+                    <button type="button" @click.prevent.stop="confirmDelete(item.id)" class="text-red-600 hover:text-red-900 border border-red-600 rounded px-2 text-xs">Delete</button>
                 </template>
             </ServerDataTable>
         </div>
-
-        <!-- Product Modal -->
-        <Modal v-model="showModal" :title="isEditing ? 'Edit Product' : 'Add New Product'">
-            <form @submit.prevent="saveProduct" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Name</label>
-                    <input v-model="form.name" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">SKU</label>
-                        <input v-model="form.sku" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Stock</label>
-                        <input v-model.number="form.stock_quantity" type="number" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Cost Price</label>
-                        <input v-model.number="form.cost_price" type="number" step="0.01" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Selling Price</label>
-                        <input v-model.number="form.base_price" type="number" step="0.01" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
-                    </div>
-                </div>
-
-                <!-- Error Messages -->
-                <div v-if="errors" class="text-red-600 text-sm">
-                    {{ errors }}
-                </div>
-
-                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
-                        Save
-                    </button>
-                    <button type="button" @click="showModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </Modal>
     </div>
 </template>
 
@@ -75,12 +31,9 @@
 import { ref, onMounted, reactive } from 'vue';
 import { useProductStore } from '../../stores/product';
 import ServerDataTable from '../../components/ui/ServerDataTable.vue';
-import Modal from '../../components/ui/Modal.vue';
+import Swal from 'sweetalert2';
 
 const store = useProductStore();
-const showModal = ref(false);
-const isEditing = ref(false);
-const errors = ref(null);
 const search = ref('');
 
 const headers = [
@@ -89,15 +42,6 @@ const headers = [
     { key: 'stock_quantity', label: 'Stock' },
     { key: 'base_price', label: 'Price' },
 ];
-
-const form = reactive({
-    id: null,
-    name: '',
-    sku: '',
-    stock_quantity: 0,
-    cost_price: 0,
-    base_price: 0
-});
 
 const fetchData = (page = 1) => {
     store.fetchProducts({
@@ -122,40 +66,37 @@ const handlePageChange = (page) => {
     fetchData(page);
 };
 
-const openModal = (item = null) => {
-    errors.value = null;
-    if (item) {
-        isEditing.value = true;
-        Object.assign(form, item);
-    } else {
-        isEditing.value = false;
-        Object.assign(form, { id: null, name: '', sku: '', stock_quantity: 0, cost_price: 0, base_price: 0 });
-    }
-    showModal.value = true;
-};
-
-const saveProduct = async () => {
-    try {
-        if (isEditing.value) {
-            await store.updateProduct(form.id, form);
-        } else {
-            await store.createProduct(form);
-        }
-        showModal.value = false;
-        fetchData(store.pagination.current_page || 1);
-    } catch (error) {
-        if (error.response && error.response.status === 422) {
-             errors.value = Object.values(error.response.data.errors).flat().join(', ');
-        } else {
-             errors.value = 'An error occurred.';
-        }
-    }
-};
-
 const confirmDelete = async (id) => {
-    if(confirm('Are you sure?')) {
-        await store.deleteProduct(id);
-        fetchData(store.pagination.current_page || 1);
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this! Deleted product will also remove related variants.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+        try {
+             await store.deleteProduct(id);
+             Swal.fire(
+                'Deleted!',
+                'Product has been deleted.',
+                'success'
+            );
+            // Refresh Data
+            fetchData(store.pagination.current_page || 1);
+        } catch (e) {
+             console.error(e);
+             // Handle 422 etc
+             const message = e.response?.data?.message || 'Failed to delete product';
+             Swal.fire(
+                'Error!',
+                message,
+                'error'
+            );
+        }
     }
 };
 </script>

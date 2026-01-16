@@ -48,12 +48,17 @@ export const useProductStore = defineStore('product', {
         },
 
         async deleteProduct(id) {
-            if (!confirm('Are you sure?')) return;
+            // Confirmation handled in component
             try {
                 await axios.delete(`/api/v1/products/${id}`);
-                await this.fetchProducts();
+                // Do NOT fetch here, let component handle it to ensure pagination state is respected or allow component to decide.
+                // Or better: ensure we await this properly.
+                // actually, fetchProducts call inside here is fine IF we await it.
+                // Issue might be mixed calls.
+                // Let's RETURN the promise so component awaits it.
             } catch (error) {
-                alert('Failed to delete product');
+                // throw so component knows it failed
+                 throw error;
             }
         }
     }

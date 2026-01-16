@@ -21,12 +21,13 @@
         </div>
 
         <!-- content -->
+        <!-- content -->
         <div v-if="activeTab === 'sizes'">
             <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-medium mb-4">Manage Sizes</h3>
+                <h3 class="text-lg font-medium mb-4">{{ editingSizeId ? 'Edit Size' : 'Add Size' }}</h3>
                 
-                 <!-- Add Form -->
-                <form @submit.prevent="addSize" class="flex gap-4 items-end mb-6">
+                 <!-- Add/Edit Form -->
+                <form @submit.prevent="saveSize" class="flex gap-4 items-end mb-6">
                     <div>
                         <label class="block text-xs font-medium text-gray-700">Name</label>
                         <input v-model="sizeForm.name" type="text" required placeholder="e.g. M, L, Unstitched" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
@@ -35,7 +36,10 @@
                         <label class="block text-xs font-medium text-gray-700">Code (Optional)</label>
                         <input v-model="sizeForm.code" type="text" placeholder="Short Code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                     </div>
-                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">Add Size</button>
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">
+                        {{ editingSizeId ? 'Update' : 'Add' }}
+                    </button>
+                    <button v-if="editingSizeId" @click.prevent="cancelEditSize" class="text-gray-600 px-4 py-2 text-sm hover:underline">Cancel</button>
                 </form>
 
                 <!-- List -->
@@ -51,8 +55,9 @@
                         <tr v-for="size in store.sizes" :key="size.id">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ size.name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ size.code || '-' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button @click="deleteSize(size.id)" class="text-red-600 hover:text-red-900">Delete</button>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                <button @click="editSize(size)" class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                                <button type="button" @click.prevent.stop="deleteSize(size.id)" class="text-red-600 hover:text-red-900">Delete</button>
                             </td>
                         </tr>
                     </tbody>
@@ -62,10 +67,10 @@
 
         <div v-if="activeTab === 'colors'">
              <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-medium mb-4">Manage Colors</h3>
+                <h3 class="text-lg font-medium mb-4">{{ editingColorId ? 'Edit Color' : 'Add Color' }}</h3>
                 
-                 <!-- Add Form -->
-                <form @submit.prevent="addColor" class="flex gap-4 items-end mb-6">
+                 <!-- Add/Edit Form -->
+                <form @submit.prevent="saveColor" class="flex gap-4 items-end mb-6">
                     <div>
                         <label class="block text-xs font-medium text-gray-700">Name</label>
                         <input v-model="colorForm.name" type="text" required placeholder="e.g. Red, Blue" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
@@ -77,7 +82,10 @@
                             <input v-model="colorForm.code" type="text" placeholder="#RRGGBB" class="block w-24 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                         </div>
                     </div>
-                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">Add Color</button>
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm">
+                        {{ editingColorId ? 'Update' : 'Add' }}
+                    </button>
+                     <button v-if="editingColorId" @click.prevent="cancelEditColor" class="text-gray-600 px-4 py-2 text-sm hover:underline">Cancel</button>
                 </form>
 
                 <!-- List -->
@@ -97,8 +105,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 <div v-if="color.code" class="w-6 h-6 rounded-full border border-gray-200" :style="{ backgroundColor: color.code }"></div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button @click="deleteColor(color.id)" class="text-red-600 hover:text-red-900">Delete</button>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                <button @click="editColor(color)" class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                                <button type="button" @click.prevent.stop="deleteColor(color.id)" class="text-red-600 hover:text-red-900">Delete</button>
                             </td>
                         </tr>
                     </tbody>
@@ -109,11 +118,21 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { useAttributeStore } from '../../stores/attribute';
+import Swal from 'sweetalert2';
+import toastr from 'toastr';
+
+toastr.options = {
+  "closeButton": true,
+  "progressBar": true,
+  "positionClass": "toast-top-right",
+};
 
 const store = useAttributeStore();
 const activeTab = ref('sizes');
+const editingSizeId = ref(null);
+const editingColorId = ref(null);
 
 const sizeForm = reactive({ name: '', code: '' });
 const colorForm = reactive({ name: '', code: '' });
@@ -123,27 +142,123 @@ onMounted(() => {
     store.fetchColors();
 });
 
-const addSize = async () => {
-    await store.createSize(sizeForm);
+// Sizes
+const saveSize = async () => {
+    try {
+        if (editingSizeId.value) {
+            await store.updateSize(editingSizeId.value, sizeForm);
+            toastr.success('Size updated successfully');
+            cancelEditSize();
+        } else {
+            await store.createSize(sizeForm);
+            toastr.success('Size created successfully');
+            sizeForm.name = '';
+            sizeForm.code = '';
+        }
+    } catch (e) {
+        toastr.error(store.error || 'Failed to save size');
+    }
+};
+
+const editSize = (size) => {
+    editingSizeId.value = size.id;
+    sizeForm.name = size.name;
+    sizeForm.code = size.code;
+};
+
+const cancelEditSize = () => {
+    editingSizeId.value = null;
     sizeForm.name = '';
     sizeForm.code = '';
 };
 
 const deleteSize = async (id) => {
-    if (confirm('Delete this size?')) {
-        await store.deleteSize(id);
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+        store.error = null;
+        try {
+            await store.deleteSize(id);
+            Swal.fire(
+                'Deleted!',
+                'Size has been deleted.',
+                'success'
+            );
+        } catch (e) {
+            Swal.fire(
+                'Error!',
+                store.error || 'Failed to delete size.',
+                'error'
+            );
+        }
     }
 };
 
-const addColor = async () => {
-    await store.createColor(colorForm);
+// Colors
+const saveColor = async () => {
+    try {
+        if (editingColorId.value) {
+            await store.updateColor(editingColorId.value, colorForm);
+            toastr.success('Color updated successfully');
+            cancelEditColor();
+        } else {
+            await store.createColor(colorForm);
+            toastr.success('Color created successfully');
+            colorForm.name = '';
+            colorForm.code = '';
+        }
+    } catch (e) {
+        toastr.error(store.error || 'Failed to save color');
+    }
+};
+
+const editColor = (color) => {
+    editingColorId.value = color.id;
+    colorForm.name = color.name;
+    colorForm.code = color.code;
+};
+
+const cancelEditColor = () => {
+    editingColorId.value = null;
     colorForm.name = '';
     colorForm.code = '';
 };
 
 const deleteColor = async (id) => {
-    if (confirm('Delete this color?')) {
-        await store.deleteColor(id);
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+        store.error = null;
+        try {
+            await store.deleteColor(id);
+             Swal.fire(
+                'Deleted!',
+                'Color has been deleted.',
+                'success'
+            );
+        } catch (e) {
+            Swal.fire(
+                'Error!',
+                store.error || 'Failed to delete color.',
+                'error'
+            );
+        }
     }
 };
 </script>

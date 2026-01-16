@@ -37,6 +37,10 @@ class SizeController extends Controller
 
     public function destroy(Size $size)
     {
+        if ($size->variants()->exists()) {
+            return response()->json(['message' => 'Cannot delete size. It is used by existing products.'], 422);
+        }
+
         $size->delete();
         return response()->noContent();
     }

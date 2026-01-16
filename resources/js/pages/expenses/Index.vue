@@ -53,6 +53,7 @@ import { onMounted, ref } from 'vue';
 import { useExpenseStore } from '../../stores/expense';
 import ServerDataTable from '../../components/ui/ServerDataTable.vue';
 import ExpenseModal from '../../components/ExpenseModal.vue';
+import Swal from 'sweetalert2';
 
 const store = useExpenseStore();
 const showModal = ref(false);
@@ -96,10 +97,25 @@ const openModal = (expense = null) => {
     showModal.value = true;
 };
 
-const deleteExpense = async (id) => {
-    if (confirm('Are you sure you want to delete this expense?')) {
-        await store.deleteExpense(id);
-    }
+const deleteExpense = (id) => {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await store.deleteExpense(id);
+                Swal.fire('Deleted!', 'Expense has been deleted.', 'success');
+            } catch (error) {
+                Swal.fire('Error!', 'Failed to delete expense.', 'error');
+            }
+        }
+    });
 };
 
 const refresh = () => {

@@ -4,49 +4,67 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Tenant;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
-    /**
-     * Get current tenant settings.
-     */
-    public function show(Request $request)
+    public function show()
     {
-        // Tenant is resolved via Middleware, accessible via auth user
-        $tenant = $request->user()->tenant;
+        // For MVP, we assume Single Tenant (ID 1)
+        $tenant = DB::table('tenants')->find(1);
+        if (!$tenant) {
+            return response()->json(['message' => 'Tenant not found'], 404);
+        }
         
-        return response()->json([
-            'data' => $tenant
-        ]);
-    }
-
-    /**
-     * Update tenant settings (Branding).
-     */
-    public function update(Request $request)
-    {
-        $tenant = $request->user()->tenant;
-
-        // Ensure user is Owner (Gate or Role check)
-        // For MVP, assuming Owner role check is done via middleware or here
-        if (!$request->user()->hasRole('Owner')) {
-             return response()->json(['message' => 'Unauthorized'], 403);
+        // Add full URL to logo if exists
+        if ($tenant->logo) {
+            $tenant->logo_url = Storage::url($tenant->logo);
+        } else {
+            $tenant->logo_url = null;
         }
 
-        $validated = $request->validate([
-            'address' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:20',
-            'logo' => 'nullable|url', // Assuming simple URL for MVP, or implement upload later
-            'currency' => 'nullable|string|size:3',
-            'timezone' => 'nullable|string',
+        return response()->json($tenant);
+    }
+
+    public function update(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'currency' => 'required|string|max:10',
+            'timezone' => 'required|string|max:50',
+            'address' => 'nullable|string',
+            'phone' => 'nullable|string|max:50',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        $tenant->update($validated);
+        $tenantId = 1;
+
+        $data = $request->only(['name', 'currency', 'timezone', 'address', 'phone']);
+        $tenant = DB::table('tenants')->where('id', $tenantId)->first();
+
+        // Handle Logo Upload
+        if ($request->hasFile('logo')) {
+            // Delete old logo if exists
+            if ($tenant->logo && Storage::exists($tenant->logo)) {
+                Storage::delete($tenant->logo);
+            }
+
+            // Store new logo
+            $path = $request->file('logo')->store('logos', 'public');
+            $data['logo'] = $path;
+        }
+
+        DB::table('tenants')->where('id', $tenantId)->update($data);
+
+        $updatedTenant = DB::table('tenants')->find($tenantId);
+        if ($updatedTenant->logo) {
+            $updatedTenant->logo_url = Storage::url($updatedTenant->logo);
+        }
 
         return response()->json([
-            'message' => 'Settings updated successfully.',
-            'data' => $tenant
+            'message' => 'Settings updated successfully',
+            'data' => $updatedTenant
         ]);
     }
 }

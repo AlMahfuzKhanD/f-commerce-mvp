@@ -55,9 +55,11 @@ Route::prefix('v1')->group(function () {
 
         // Operations
         Route::apiResource('expenses', \App\Http\Controllers\Api\v1\ExpenseController::class);
+        Route::get('dashboard', [\App\Http\Controllers\Api\v1\DashboardController::class, 'index']);
 
         // Settings & Profile
         Route::get('settings', [\App\Http\Controllers\Api\v1\SettingsController::class, 'show']);
+        Route::post('settings', [\App\Http\Controllers\Api\v1\SettingsController::class, 'update']);
         Route::put('settings', [\App\Http\Controllers\Api\v1\SettingsController::class, 'update']);
 
         Route::get('profile', [\App\Http\Controllers\Api\v1\ProfileController::class, 'show']);

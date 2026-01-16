@@ -14,13 +14,14 @@
         <div v-else class="bg-white rounded-lg shadow p-6">
             <form @submit.prevent="saveProduct" class="space-y-6">
                 <!-- Same Form Structure as Create.vue -->
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div class="col-span-2">
+                <!-- Same Form Structure as Create.vue -->
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-12">
+                    <div class="sm:col-span-6">
                         <label class="block text-sm font-medium text-gray-700">Product Name</label>
                         <input v-model="form.name" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                     </div>
 
-                    <div>
+                    <div class="sm:col-span-4">
                         <label class="block text-sm font-medium text-gray-700">Category</label>
                         <select v-model="form.category_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                             <option :value="null">Select Category</option>
@@ -30,45 +31,19 @@
                         </select>
                     </div>
 
-                    <div v-if="form.variants.length === 0">
-                        <label class="block text-sm font-medium text-gray-700">SKU</label>
-                        <input v-model="form.sku" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                    <div class="sm:col-span-2 flex items-center pt-6">
+                        <input id="is_active" v-model="form.is_active" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                            Active
+                        </label>
                     </div>
 
-                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Stock Quantity (Total)</label>
-                        <input v-if="form.variants.length === 0" v-model.number="form.stock_quantity" type="number" required min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
-                         <div v-else class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm border p-2 text-gray-500">
-                             {{ form.variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0) }} (Sum of variants)
-                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Cost Price</label>
-                        <div class="mt-1 relative rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">৳</span>
-                            </div>
-                            <input v-model.number="form.cost_price" type="number" min="0" step="0.01" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 sm:text-sm border-gray-300 rounded-md border p-2" placeholder="0.00">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Selling Price</label>
-                         <div class="mt-1 relative rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">৳</span>
-                            </div>
-                            <input v-model.number="form.base_price" type="number" required min="0" step="0.01" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 sm:text-sm border-gray-300 rounded-md border p-2" placeholder="0.00">
-                        </div>
-                    </div>
-
-                     <div class="col-span-2">
+                     <div class="sm:col-span-12">
                         <label class="block text-sm font-medium text-gray-700">Description (Optional)</label>
                         <textarea v-model="form.description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"></textarea>
                     </div>
 
-                    <div class="col-span-2 border-t pt-4 mt-2">
+                    <div class="sm:col-span-12 border-t pt-4 mt-2">
                         <VariantBuilder v-model="form.variants" />
                     </div>
                 </div>
@@ -96,6 +71,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useProductStore } from '../../stores/product';
 import { useCategoryStore } from '../../stores/category';
 import VariantBuilder from '../../components/products/VariantBuilder.vue';
+import { generateUniqueBarcode } from '../../utils/barcode';
 import axios from 'axios';
 import toastr from 'toastr';
 
@@ -104,16 +80,13 @@ const route = useRoute();
 const store = useProductStore();
 const categoryStore = useCategoryStore();
 const loading = ref(false);
+const generating = ref(false);
 const initialLoading = ref(true);
 const error = ref(null);
 
 const form = reactive({
     id: null,
     name: '',
-    sku: '',
-    stock_quantity: 0,
-    base_price: 0,
-    cost_price: 0,
     description: '',
     is_active: true,
     category_id: null,
@@ -127,23 +100,30 @@ onMounted(async () => {
         try {
             const response = await window.axios.get(`/api/v1/products/${productId}`);
             const product = response.data.data;
+            // Populate form
             Object.assign(form, {
                 id: product.id,
                 name: product.name,
-                sku: product.sku,
-                stock_quantity: product.stock_quantity,
-                base_price: product.base_price,
-                cost_price: product.cost_price,
-                description: product.description,
+                is_active: product.is_active,
+                description: product.description || '', // Default empty
                 category_id: product.category_id,
-                variants: product.variants.map(v => ({ ...v }))
+                variants: (product.variants || []).map(v => ({...v}))
             });
+
+            // Ensure at least one variant row (for existing simple products, it should be there)
+            if (form.variants.length === 0) {
+                 // Should technically not happen if data is correct, but safe fallback
+                 // Wait, we can generate a new row if empty?
+            }
+            // Logic to flatten or check simple is REMOVED. We just show the variants.
+
         } catch (err) {
-            error.value = "Failed to load product details.";
+            error.value = "Failed to load product.";
             toastr.error("Failed to load product details");
             console.error(err);
         } finally {
             initialLoading.value = false;
+            loading.value = false;
         }
     }
 });

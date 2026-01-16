@@ -17,8 +17,10 @@ class ProductVariant extends Model
         'size_id',
         'color_id',
         'sku',
+        'barcode',
         'stock_quantity',
-        'extra_price',
+        'price',
+        'cost_price',
     ];
 
     public function product()

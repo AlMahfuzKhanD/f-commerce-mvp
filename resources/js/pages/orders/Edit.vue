@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-6">
-        <h2 class="text-xl font-semibold text-gray-800">Create New Order</h2>
+        <h2 class="text-xl font-semibold text-gray-800">Edit Order #{{ form.order_number }}</h2>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Left: Product Selection -->
@@ -14,12 +14,10 @@
                                 {{ c.name }} ({{ c.phone }})
                             </option>
                         </select>
-                        <!-- Simplify: Just load all customers for now, scalable search later -->
                     </div>
                 </div>
 
                 <!-- Products -->
-                <!-- Scan Barcode -->
                 <!-- Scan Barcode / Search -->
                 <div class="bg-indigo-50 p-4 rounded shadow border border-indigo-100 relative">
                     <label class="block text-sm font-bold text-indigo-700 mb-2">Scan Barcode / Search Product</label>
@@ -132,20 +130,20 @@
                     
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Subtotal</span>
-                        <span class="font-medium">{{ subtotal }}</span>
+                        <span class="font-medium">{{ subtotal.toFixed(2) }}</span>
                     </div>
                      <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-600">Discount</span>
-                         <input v-model.number="form.discount" type="number" class="w-20 border rounded p-1 text-right">
+                         <input v-model.number="form.discount" type="number" step="0.01" class="w-20 border rounded p-1 text-right">
                     </div>
                      <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-600">Delivery</span>
-                         <input v-model.number="form.delivery_charge" type="number" class="w-20 border rounded p-1 text-right">
+                         <input v-model.number="form.delivery_charge" type="number" step="0.01" class="w-20 border rounded p-1 text-right">
                     </div>
                     
                     <div class="flex justify-between text-lg font-bold border-t pt-2">
                         <span>Total</span>
-                        <span>{{ total }}</span>
+                        <span>{{ total.toFixed(2) }}</span>
                     </div>
 
                     <div class="pt-4">
@@ -156,9 +154,14 @@
                         </select>
                     </div>
 
-                    <button @click="submitOrder" :disabled="cart.length === 0 || !form.customer_id" class="w-full bg-indigo-600 text-white py-2 rounded shadow hover:bg-indigo-700 disabled:opacity-50">
-                        Create Order
-                    </button>
+                    <div class="flex gap-2">
+                         <button @click="$router.back()" class="w-1/3 bg-gray-200 text-gray-700 py-2 rounded shadow hover:bg-gray-300">
+                            Cancel
+                        </button>
+                        <button @click="updateOrder" :disabled="cart.length === 0 || !form.customer_id" class="w-2/3 bg-indigo-600 text-white py-2 rounded shadow hover:bg-indigo-700 disabled:opacity-50">
+                            Update Order
+                        </button>
+                    </div>
                     
                      <div v-if="error" class="text-red-600 text-xs text-center">
                         {{ error }}
@@ -171,12 +174,13 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useCustomerStore } from '../../stores/customer';
 import { useProductStore } from '../../stores/product';
 import { useOrderStore } from '../../stores/order';
 
 const router = useRouter();
+const route = useRoute();
 const customerStore = useCustomerStore();
 const productStore = useProductStore();
 const orderStore = useOrderStore();
@@ -184,8 +188,9 @@ const orderStore = useOrderStore();
 const customers = computed(() => customerStore.customers);
 const products = computed(() => productStore.products);
 
-const cart = ref([{ product_id: null, product_variant_id: null, quantity: 1, unit_price: 0 }]);
+const cart = ref([]);
 const form = reactive({
+    order_number: '',
     customer_id: '',
     discount: 0,
     delivery_charge: 0,
@@ -193,11 +198,43 @@ const form = reactive({
 });
 const error = ref(null);
 
-onMounted(() => {
+onMounted(async () => {
     customerStore.fetchCustomers();
     productStore.fetchProducts();
     if (barcodeRef.value) {
         barcodeRef.value.focus();
+    }
+    
+    // Load Order
+    const orderId = route.params.id;
+    if (orderId) {
+        try {
+            await orderStore.fetchOrder(orderId);
+            const order = orderStore.currentOrder; // Fixed: accessing currentOrder from state
+            
+            if (order) {
+                form.order_number = order.order_number;
+                form.customer_id = order.customer_id;
+                form.discount = Number(order.discount || 0);
+                form.delivery_charge = Number(order.delivery_charge || 0);
+                form.order_source = order.order_source || 'manual';
+    
+                // Populate Cart
+                if (order.items && Array.isArray(order.items)) {
+                     cart.value = order.items.map(item => {
+                        return {
+                            product_id: item.product_id,
+                            product_variant_id: item.product_variant_id,
+                            quantity: Number(item.quantity || 1),
+                            unit_price: Number(item.unit_price || 0) 
+                        };
+                     });
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            error.value = "Failed to load order.";
+        }
     }
 });
 
@@ -227,40 +264,27 @@ const onSearchInput = () => {
             searchResults.value = response.data.data;
         } catch (e) {
             searchResults.value = [];
-            // Don't show error while typing, just empty list
         }
-    }, 300); // 300ms debounce
+    }, 300);
 };
 
 const handleEnter = async () => {
-    // If we have results, use the first one OR if only 1 exact match?
-    // If results is empty, try immediate fetch (maybe user pasted and pressed enter fast)
     if (searchResults.value.length === 0) {
         if (!barcodeInput.value) return;
         try {
              const response = await window.axios.get(`/api/v1/products/scan?barcode=${barcodeInput.value}`);
              const hits = response.data.data;
-             if (hits.length === 1) {
-                 selectResult(hits[0]);
-             } else if (hits.length > 1) {
-                 searchResults.value = hits; // Show dropdown
-             } else {
-                 scanError.value = "Product not found";
-             }
+             if (hits.length === 1) selectResult(hits[0]);
+             else if (hits.length > 1) searchResults.value = hits;
+             else scanError.value = "Product not found";
         } catch (e) {
              scanError.value = "Product not found";
         }
     } else if (searchResults.value.length === 1) {
         selectResult(searchResults.value[0]);
     } else {
-        // If multiple, maybe select first? Or let user choose? 
-        // For scan use case: "Scan" usually means exact match.
-        // If one of the results has EXACT barcode match, pick it.
         const exactMatch = searchResults.value.find(r => r.barcode === barcodeInput.value);
-        if (exactMatch) {
-            selectResult(exactMatch);
-        }
-        // Else do nothing, let user click.
+        if (exactMatch) selectResult(exactMatch);
     }
 };
 
@@ -272,40 +296,26 @@ const selectResult = (item) => {
         unit_price: item.price
     };
 
-     // Add to cart
-     // Check if exists?
     const existing = cart.value.find(i => i.product_id === newItem.product_id && i.product_variant_id === newItem.product_variant_id);
     if (existing) {
         existing.quantity++;
     } else {
-        // Remove empty default row if present
-        if (cart.value.length === 1 && !cart.value[0].product_id) {
-            cart.value.pop();
-        }
         cart.value.push(newItem);
     }
     
-    // Reset
     barcodeInput.value = '';
     searchResults.value = [];
     scanError.value = null;
-    
-    // Re-focus?
-    // barcodeRef.value.focus(); // Sometimes problematic with blur
 };
 
 const onProductSelect = (item) => {
-    item.product_variant_id = null; // Reset variant
+    item.product_variant_id = null; 
     const product = products.value.find(p => p.id === item.product_id);
     if (product) {
-        // Auto-select variant if it's the only one (Simple Product)
         if (product.variants && product.variants.length === 1) {
             item.product_variant_id = product.variants[0].id;
-            // Set price from that variant
             item.unit_price = Number(product.variants[0].price);
         } else {
-            // Variable product, wait for selection. 
-            // Optional: Set min price as placeholder?
              item.unit_price = product.base_price; 
         }
     }
@@ -316,7 +326,6 @@ const onVariantSelect = (item) => {
      if (product && item.product_variant_id) {
          const variant = product.variants.find(v => v.id === item.product_variant_id);
          if (variant) {
-             // Unified Price Architecture: Use variant price directly
              item.unit_price = Number(variant.price);
          }
      } else if (product) {
@@ -340,15 +349,14 @@ const total = computed(() => {
     return subtotal.value + form.delivery_charge - form.discount;
 });
 
-const submitOrder = async () => {
+const updateOrder = async () => {
     error.value = null;
     try {
-        // Prepare payload matching API
         const payload = {
             customer_id: form.customer_id,
             items: cart.value.filter(i => i.product_id).map(i => ({
                 product_id: i.product_id,
-                product_variant_id: i.product_variant_id, // Add variant ID
+                product_variant_id: i.product_variant_id, 
                 quantity: i.quantity,
                 unit_price: i.unit_price
             })),
@@ -357,11 +365,11 @@ const submitOrder = async () => {
             order_source: form.order_source
         };
         
-        await orderStore.createOrder(payload);
+        await orderStore.updateOrder(route.params.id, payload);
         router.push({ name: 'Orders' });
     } catch (err) {
         console.log(err);
-        error.value = err.response?.data?.message || 'Failed to create order';
+        error.value = err.response?.data?.message || 'Failed to update order';
     }
 };
 </script>

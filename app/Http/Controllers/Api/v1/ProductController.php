@@ -11,6 +11,51 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     /**
+     * Scan product by barcode.
+     */
+    public function scan(Request $request)
+    {
+        $query = $request->input('barcode');
+        if (!$query) return response()->json(['message' => 'Query required'], 400);
+
+        // Search Variants matching Barcode or SKU or Product Name
+        // We want to return specific VARIANTS that match.
+        
+        $variants = \App\Models\ProductVariant::with('product')
+            ->where(function($q) use ($query) {
+                $q->where('barcode', 'like', "%{$query}%")
+                  ->orWhere('sku', 'like', "%{$query}%")
+                  ->orWhereHas('product', function($pq) use ($query) {
+                      $pq->where('name', 'like', "%{$query}%");
+                  });
+            })
+            ->take(10) // Limit results for autocomplete
+            ->get();
+
+        if ($variants->isEmpty()) {
+             return response()->json(['data' => [], 'message' => 'No products found'], 200);
+        }
+
+        // Map to a useful structure
+        $data = $variants->map(function($v) {
+             return [
+                'product_id' => $v->product_id,
+                'product_variant_id' => $v->id,
+                'name' => $v->product->name,
+                'variant_label' => $v->size_name || $v->color_name 
+                                    ? "({$v->size_name} / {$v->color_name})" 
+                                    : "",
+                'sku' => $v->sku,
+                'barcode' => $v->barcode,
+                'price' => (float) $v->price,
+                'stock' => $v->stock_quantity
+             ];
+        });
+
+        return response()->json(['data' => $data]);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -20,8 +65,13 @@ class ProductController extends Controller
         // Simple Search
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('variants', function($subQ) use ($search) {
+                      $subQ->where('sku', 'like', "%{$search}%")
+                           ->orWhere('barcode', 'like', "%{$search}%");
+                  });
+            });
         }
 
         // Active filter (default true unless specified)
@@ -41,12 +91,24 @@ class ProductController extends Controller
     {
         return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
             $data = $request->validated();
-            // Create Product
-            $product = Product::create(\Illuminate\Support\Arr::except($data, ['variants']));
+            // Create Product (only common fields)
+            $product = Product::create(\Illuminate\Support\Arr::only($data, ['name', 'description', 'category_id', 'is_active', 'tenant_id']));
 
-            // Create Variants if any
+            // Create Variants
             if ($request->has('variants') && count($data['variants']) > 0) {
+                // Front-end sends variants with price/quantity/sku/barcode
+                // Make sure they handle 'price' correctly (frontend might send extra_price, need to check Request)
                 $product->variants()->createMany($data['variants']);
+            } else {
+                // Create Default Variant from Root Fields
+                // The root fields (sku, price, etc) passed in request need to be saved as a variant
+                $product->variants()->create([
+                    'sku' => $data['sku'] ?? null,
+                    'barcode' => $data['barcode'] ?? null,
+                    'price' => $data['base_price'] ?? 0, // Frontend sends base_price
+                    'cost_price' => $data['cost_price'] ?? 0,
+                    'stock_quantity' => $data['stock_quantity'] ?? 0,
+                ]);
             }
 
             return new ProductResource($product->load('variants'));
@@ -71,28 +133,27 @@ class ProductController extends Controller
             $product = Product::findOrFail($id);
             $data = $request->validated();
 
-            $product->update(\Illuminate\Support\Arr::except($data, ['variants']));
+            $product->update(\Illuminate\Support\Arr::only($data, ['name', 'description', 'category_id', 'is_active']));
 
-            // Handle Variants Update (Sync logic is complex, for MVP mostly replace or add)
-            // Strategy: For now, if variants are provided, we will delete old ones and recreate?
-            // BETTER STRATEGY to preserve IDs: Loop and update. But IDs are not passed in Request.
-            // MVP Decision: Delete all and recreate if 'variants' key is present.
-            // WARNING: This changes IDs. Good enough for now? No, Order Items reference them.
-            // PROPER MVP: Only support Adding/Editing if we pass IDs.
-            // SIMPLIFICATION: If variants passed, we check `sku`. If match, update. Else create.
-            // LIMITATION: Deletion is hard without explicit delete list.
+            // Handle Variants
+            // Strategy: Delete all and recreate is easiest for MVP compliance with new structure
+            // But if we want to preserve IDs...
+            // Let's stick to "Delete All and Recreate" for consistency as before, 
+            // BUT we must handle the "Simple to Variable" or "Variable to Simple" switch.
             
-            // Revert to "Delete All Recreate" IS DANGEROUS for Orders.
-            // So, we will just CREATE new ones or UPDATE existing if an ID or SKU is matched?
-            // Let's go with "Delete All" for now but we must be careful.
-            // Actually, if OrderItem references Variant, cascading delete will NULL the reference (Set Null).
-            // This is safer. Order history remains, just link is broken.
-            
-            if ($request->has('variants')) {
-                 $product->variants()->delete(); // Soft delete if trait used, or hard delete
-                 if (count($data['variants']) > 0) {
-                     $product->variants()->createMany($data['variants']);
-                 }
+            $product->variants()->delete(); // Hard or Soft delete
+
+            if ($request->has('variants') && count($data['variants']) > 0) {
+                $product->variants()->createMany($data['variants']);
+            } else {
+                 // Recreate Default Variant
+                $product->variants()->create([
+                    'sku' => $data['sku'] ?? null,
+                    'barcode' => $data['barcode'] ?? null,
+                    'price' => $data['base_price'] ?? 0,
+                    'cost_price' => $data['cost_price'] ?? 0,
+                    'stock_quantity' => $data['stock_quantity'] ?? 0,
+                ]);
             }
 
             return new ProductResource($product->load('variants'));

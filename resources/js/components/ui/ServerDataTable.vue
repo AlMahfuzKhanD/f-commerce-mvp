@@ -55,12 +55,12 @@
                                     {{ calculateSerial(index) }}
                                 </td>
                                 <td v-for="header in headers" :key="header.key" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <slot :name="header.key" :item="item">
+                                    <slot :name="header.key" :item="item" :index="index">
                                         {{ item[header.key] }}
                                     </slot>
                                 </td>
                                 <td v-if="actions" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <slot name="actions" :item="item"></slot>
+                                    <slot name="actions" :item="item" :index="index"></slot>
                                 </td>
                             </tr>
                             <tr v-if="items.length === 0 && !loading">

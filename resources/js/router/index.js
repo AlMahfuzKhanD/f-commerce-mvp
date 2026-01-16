@@ -77,6 +77,11 @@ const routes = [
                 component: () => import('../pages/orders/Create.vue')
             },
             {
+                path: 'orders/:id/edit',
+                name: 'EditOrder',
+                component: () => import('../pages/orders/Edit.vue')
+            },
+            {
                 path: 'profile',
                 name: 'Profile',
                 component: () => import('../pages/Profile.vue')

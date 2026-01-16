@@ -16,10 +16,6 @@ class Product extends Model
         'tenant_id',
         'category_id',
         'name',
-        'sku',
-        'base_price',
-        'cost_price',
-        'stock_quantity',
         'is_active',
         'description',
     ];

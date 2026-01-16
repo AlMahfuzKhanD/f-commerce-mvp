@@ -74,33 +74,20 @@ class OrderController extends Controller
     public function updateStatus(Request $request, string $id, \App\Services\InvoiceService $invoiceService)
     {
         $request->validate([
-            'status' => 'required|string|in:pending,confirmed,shipped,delivered,cancelled'
+            'status' => 'required|string|in:pending,confirmed,shipped,delivered,cancelled,returned'
         ]);
 
         $order = Order::findOrFail($id);
-        $oldStatus = $order->status;
-        $newStatus = $request->status;
-
-        if ($oldStatus === $newStatus) {
-            return response()->json(['message' => 'Status is already ' . $newStatus]);
+        
+        try {
+            $this->orderService->updateStatus($order, $request->status, $request->user()->id);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        $order->update(['status' => $newStatus]);
-
-        // Log Event
-        $order->events()->create([
-            'tenant_id' => $order->tenant_id,
-            'event_type' => 'status_changed',
-            'meta' => [
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus,
-                'changed_by' => $request->user()->id
-            ]
-        ]);
-
         // Sprint 3: Auto-generate Invoice
-        if ($newStatus === 'confirmed') {
-            $invoiceService->generateInvoice($order);
+        if ($request->status === 'confirmed') {
+            $invoiceService->generateInvoice($order->fresh());
         }
 
         return new OrderResource($order->fresh());
@@ -112,15 +99,30 @@ class OrderController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validated = $request->validate([
+        $rules = [
             'order_date' => 'sometimes|date',
-            // Add other updatable fields here, e.g. customer_id, notes
-        ]);
+            'customer_id' => 'sometimes|exists:customers,id',
+            'notes' => 'nullable|string',
+            'discount' => 'sometimes|numeric|min:0',
+            'delivery_charge' => 'sometimes|numeric|min:0',
+        ];
 
+        // If items are being updated, validate them strictly
+        if ($request->has('items')) {
+            $rules['items'] = ['required', 'array', 'min:1'];
+            $rules['items.*.product_id'] = ['required', 'exists:products,id'];
+            $rules['items.*.product_variant_id'] = ['required', 'exists:product_variants,id'];
+            $rules['items.*.quantity'] = ['required', 'integer', 'min:1'];
+            $rules['items.*.unit_price'] = ['required', 'numeric', 'min:0'];
+        }
+
+        $validated = $request->validate($rules);
         $order = Order::findOrFail($id);
-        $order->update($validated);
 
-        return new OrderResource($order);
+        // Use Service for complex update (stock management etc)
+        $this->orderService->updateOrder($order, $validated);
+
+        return new OrderResource($order->fresh());
     }
 
     /**
@@ -136,9 +138,11 @@ class OrderController extends Controller
         $order = Order::with('items')->findOrFail($id);
         
         foreach ($order->items as $item) {
-             $product = \App\Models\Product::find($item->product_id);
-             if ($product) {
-                 $product->increment('stock_quantity', $item->quantity);
+             if ($item->product_variant_id) {
+                 $variant = \App\Models\ProductVariant::find($item->product_variant_id);
+                 if ($variant) {
+                     $variant->increment('stock_quantity', $item->quantity);
+                 }
              }
         }
 

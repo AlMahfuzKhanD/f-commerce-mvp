@@ -19,6 +19,7 @@ Route::prefix('v1')->group(function () {
     // Protected Business Routes
     Route::middleware('auth:sanctum')->group(function () {
         // Products
+        Route::get('products/scan', [\App\Http\Controllers\Api\v1\ProductController::class, 'scan']);
         Route::apiResource('products', \App\Http\Controllers\Api\v1\ProductController::class);
         Route::apiResource('categories', \App\Http\Controllers\Api\v1\CategoryController::class);
         Route::apiResource('sizes', \App\Http\Controllers\Api\v1\SizeController::class);
@@ -31,6 +32,8 @@ Route::prefix('v1')->group(function () {
         Route::get('orders', [\App\Http\Controllers\Api\v1\OrderController::class, 'index']);
         Route::post('orders', [\App\Http\Controllers\Api\v1\OrderController::class, 'store']);
         Route::get('orders/{id}', [\App\Http\Controllers\Api\v1\OrderController::class, 'show']);
+        Route::put('orders/{id}', [\App\Http\Controllers\Api\v1\OrderController::class, 'update']);
+        Route::delete('orders/{id}', [\App\Http\Controllers\Api\v1\OrderController::class, 'destroy']);
         Route::post('orders/{id}/status', [\App\Http\Controllers\Api\v1\OrderController::class, 'updateStatus']);
         Route::get('orders/{id}/invoice', [\App\Http\Controllers\Api\v1\InvoiceController::class, 'show']);
         Route::get('orders/{id}/payments', [\App\Http\Controllers\Api\v1\PaymentController::class, 'index']);

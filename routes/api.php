@@ -51,6 +51,7 @@ Route::prefix('v1')->group(function () {
         // Sourcing
         Route::apiResource('suppliers', \App\Http\Controllers\Api\v1\SupplierController::class);
         Route::apiResource('purchases', \App\Http\Controllers\Api\v1\PurchaseController::class);
+        Route::post('purchases/{id}/payment', [\App\Http\Controllers\Api\v1\PurchaseController::class, 'addPayment']);
 
         // Operations
         Route::apiResource('expenses', \App\Http\Controllers\Api\v1\ExpenseController::class);

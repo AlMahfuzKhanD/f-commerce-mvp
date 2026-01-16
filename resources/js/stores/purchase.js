@@ -48,9 +48,18 @@ export const usePurchaseStore = defineStore('purchase', {
         },
 
         async deletePurchase(id) {
-            if (!confirm('Are you sure you want to delete this purchase? Stock will be reversed if received.')) return;
+            // Confirmation handled in component
             try {
                 await axios.delete(`/api/v1/purchases/${id}`);
+                await this.fetchPurchases();
+            } catch (error) {
+                throw error;
+            }
+        },
+
+        async addPayment(id, amount) {
+            try {
+                await axios.post(`/api/v1/purchases/${id}/payment`, { amount });
                 await this.fetchPurchases();
             } catch (error) {
                 throw error;

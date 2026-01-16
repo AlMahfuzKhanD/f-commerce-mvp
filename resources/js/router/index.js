@@ -112,6 +112,11 @@ const routes = [
                 component: () => import('../pages/purchases/Create.vue')
             },
             {
+                path: 'purchases/:id/edit',
+                name: 'EditPurchase',
+                component: () => import('../pages/purchases/Edit.vue')
+            },
+            {
                 path: 'expenses',
                 name: 'Expenses',
                 component: () => import('../pages/expenses/Index.vue')

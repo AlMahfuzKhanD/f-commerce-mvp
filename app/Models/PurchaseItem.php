@@ -10,6 +10,7 @@ class PurchaseItem extends Model
         'tenant_id',
         'purchase_id',
         'product_id',
+        'product_variant_id',
         'quantity',
         'unit_cost',
         'subtotal'

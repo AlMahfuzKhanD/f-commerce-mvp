@@ -60,6 +60,16 @@ export const useProductStore = defineStore('product', {
                 // throw so component knows it failed
                  throw error;
             }
+        },
+
+        async scanProduct(barcode) {
+            try {
+                const response = await axios.get(`/api/v1/products/scan?barcode=${barcode}`);
+                return response.data;
+            } catch (error) {
+                console.error("Scan error", error);
+                return { data: [] };
+            }
         }
     }
 });

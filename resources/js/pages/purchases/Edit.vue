@@ -1,8 +1,12 @@
 <template>
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Create Purchase Order</h1>
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Purchase Order</h1>
 
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div v-if="loadingData" class="text-center py-10">
+            Loading...
+        </div>
+
+        <div v-else class="bg-white p-6 rounded-lg shadow">
             <form @submit.prevent="savePurchase" class="space-y-6">
                 
                 <!-- Header Info -->
@@ -32,7 +36,6 @@
                         </select>
                     </div>
                 </div>
-
 
 
                 <!-- Scan Barcode / Search -->
@@ -148,7 +151,7 @@
                         Cancel
                     </router-link>
                     <button type="submit" :disabled="loading" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-                        {{ loading ? 'Processing...' : 'Create Purchase' }}
+                        {{ loading ? 'Updating...' : 'Update Purchase' }}
                     </button>
                 </div>
 
@@ -162,21 +165,24 @@
 <script setup>
 import { reactive, ref, onMounted, computed } from 'vue';
 import { useSupplierStore } from '../../stores/supplier';
-import { useProductStore } from '../../stores/product'; // Assuming this exists from previous sprints
+import { useProductStore } from '../../stores/product';
 import { usePurchaseStore } from '../../stores/purchase';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import axios from 'axios';
 
 const supplierStore = useSupplierStore();
 const productStore = useProductStore();
 const purchaseStore = usePurchaseStore();
 const router = useRouter();
+const route = useRoute();
 
 const loading = ref(false);
+const loadingData = ref(true);
 const error = ref(null);
 
 const form = reactive({
     supplier_id: '',
-    purchase_date: new Date().toISOString().substr(0, 10),
+    purchase_date: '',
     reference_no: '',
     status: 'received',
     paid_amount: 0,
@@ -200,7 +206,7 @@ const onSearchInput = () => {
 
     searchTimeout = setTimeout(async () => {
         try {
-            const response = await productStore.scanProduct(barcodeInput.value); // Use Store Action
+            const response = await productStore.scanProduct(barcodeInput.value); 
             searchResults.value = response.data || [];
         } catch (e) {
             searchResults.value = [];
@@ -253,7 +259,6 @@ const selectResult = (item) => {
     barcodeInput.value = '';
     searchResults.value = [];
     scanError.value = null;
-    // Keep focus
     if(barcodeRef.value) barcodeRef.value.focus();
 };
 
@@ -261,9 +266,33 @@ const grandTotal = computed(() => {
     return form.items.reduce((sum, item) => sum + (item.quantity * item.unit_cost), 0).toFixed(2);
 });
 
-onMounted(() => {
-    supplierStore.fetchSuppliers({ per_page: 100 });
-    productStore.fetchProducts({ per_page: 100 });
+onMounted(async () => {
+    try {
+        await Promise.all([
+            supplierStore.fetchSuppliers({ per_page: 100 }),
+            productStore.fetchProducts({ per_page: 100 })
+        ]);
+
+        const response = await axios.get(`/api/v1/purchases/${route.params.id}`);
+        const purchase = response.data.data;
+        
+        form.supplier_id = purchase.supplier_id;
+        form.purchase_date = purchase.purchase_date;
+        form.reference_no = purchase.reference_no;
+        form.status = purchase.status;
+        form.paid_amount = Number(purchase.paid_amount);
+        form.items = purchase.items.map(i => ({
+            product_id: i.product_id,
+            product_variant_id: i.product_variant_id,
+            quantity: i.quantity,
+            unit_cost: Number(i.unit_cost)
+        }));
+
+        loadingData.value = false;
+    } catch (e) {
+        error.value = "Failed to load purchase details.";
+        loadingData.value = false;
+    }
 });
 
 const addItem = () => {
@@ -277,7 +306,7 @@ const getVariants = (productId) => {
 };
 
 const removeItem = (index) => {
-    if (form.items.length > 1) {
+    if (form.items.length > 0) { // Allow removing all items (unlike create where we forced 1)
         form.items.splice(index, 1);
     }
 };
@@ -286,10 +315,10 @@ const savePurchase = async () => {
     loading.value = true;
     error.value = null;
     try {
-        await purchaseStore.createPurchase(form);
+        await purchaseStore.updatePurchase(route.params.id, form);
         router.push('/purchases');
     } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to create purchase.';
+        error.value = err.response?.data?.message || 'Failed to update purchase.';
     } finally {
         loading.value = false;
     }

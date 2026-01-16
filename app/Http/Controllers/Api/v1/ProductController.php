@@ -48,6 +48,7 @@ class ProductController extends Controller
                 'sku' => $v->sku,
                 'barcode' => $v->barcode,
                 'price' => (float) $v->price,
+                'cost_price' => (float) $v->cost_price ?? 0,
                 'stock' => $v->stock_quantity
              ];
         });

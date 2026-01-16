@@ -26,6 +26,30 @@ class OrderService
                 $lineTotal = $item['quantity'] * $item['unit_price'];
                 $subtotal += $lineTotal;
 
+                $productName = $product->name;
+                $variantId = $item['product_variant_id'] ?? null;
+
+                if ($variantId) {
+                    $variant = \App\Models\ProductVariant::find($variantId);
+                    if (!$variant) {
+                        throw new \Exception("Variant not found for product: {$product->name}");
+                    }
+                    
+                    // Check Variant Stock
+                     if ($variant->stock_quantity < $item['quantity']) {
+                        throw new \Exception("Insufficient stock for variant: {$product->name} ({$variant->size_name} / {$variant->color_name}). Requested: {$item['quantity']}, Available: {$variant->stock_quantity}");
+                    }
+                    
+                    $variant->decrement('stock_quantity', $item['quantity']);
+                    $productName .= " ({$variant->size_name} / {$variant->color_name})";
+                } else {
+                    // Standard Product Stock Check
+                    if ($product->stock_quantity < $item['quantity']) {
+                        throw new \Exception("Insufficient stock for product: {$product->name}. Requested: {$item['quantity']}, Available: {$product->stock_quantity}");
+                    }
+                    $product->decrement('stock_quantity', $item['quantity']);
+                }
+
                 $itemsData[] = [
                     // tenant_id will be handled by Model observer or manual if needed? 
                     // Better to rely on relationship or explicit set if inside transaction logic without specific model context
@@ -35,18 +59,12 @@ class OrderService
                     // Using relationship $order->items()->create(...) handles it.
                     
                     'product_id' => $item['product_id'],
-                    'product_variant_id' => $item['product_variant_id'] ?? null,
-                    'product_name' => $product->name, // SNAPSHOT
+                    'product_variant_id' => $variantId,
+                    'product_name' => $productName, // SNAPSHOT with Variant info
                     'quantity' => $item['quantity'],
                     'selling_price' => $item['unit_price'],
                     'cost_price' => $product->cost_price, // Snapshot cost at moment of sale
                 ];
-                
-                // Inventory Management (Sprint 2)
-                if ($product->stock_quantity < $item['quantity']) {
-                    throw new \Exception("Insufficient stock for product: {$product->name}. Requested: {$item['quantity']}, Available: {$product->stock_quantity}");
-                }
-                $product->decrement('stock_quantity', $item['quantity']);
             }
 
             $delivery = $data['delivery_charge'] ?? 0;

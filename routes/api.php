@@ -20,6 +20,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // Products
         Route::apiResource('products', \App\Http\Controllers\Api\v1\ProductController::class);
+        Route::apiResource('categories', \App\Http\Controllers\Api\v1\CategoryController::class);
+        Route::apiResource('sizes', \App\Http\Controllers\Api\v1\SizeController::class);
+        Route::apiResource('colors', \App\Http\Controllers\Api\v1\ColorController::class);
 
         // Customers
         Route::apiResource('customers', \App\Http\Controllers\Api\v1\CustomerController::class);

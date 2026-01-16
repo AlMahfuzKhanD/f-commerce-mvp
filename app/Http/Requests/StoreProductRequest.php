@@ -21,6 +21,7 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'category_id' => ['nullable', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:255'],
             'sku' => [
                 'nullable', 
@@ -35,6 +36,14 @@ class StoreProductRequest extends FormRequest
             'cost_price' => ['nullable', 'numeric', 'min:0'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            
+            // Variant Validation
+            'variants' => ['nullable', 'array'],
+            'variants.*.size_id' => ['nullable', 'exists:sizes,id'],
+            'variants.*.color_id' => ['nullable', 'exists:colors,id'],
+            'variants.*.sku' => ['nullable', 'string', 'distinct'], // distinct in array
+            'variants.*.stock_quantity' => ['required_with:variants', 'integer', 'min:0'],
+            'variants.*.extra_price' => ['nullable', 'numeric'],
         ];
     }
 }

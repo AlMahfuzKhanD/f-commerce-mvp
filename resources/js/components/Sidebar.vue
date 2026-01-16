@@ -14,6 +14,9 @@
                 <router-link to="/products" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">👕</span> Products
                 </router-link>
+                <router-link to="/categories" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">📂</span> Categories
+                </router-link>
                 <router-link to="/customers" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">👥</span> Customers
                 </router-link>
@@ -42,6 +45,9 @@
 
                 <router-link to="/profile" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">👤</span> Profile
+                </router-link>
+                <router-link to="/attributes" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                    <span class="mr-3">🏷️</span> Attributes
                 </router-link>
                 <router-link to="/settings" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">⚙️</span> Settings

@@ -16,13 +16,26 @@
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Category</label>
+                        <select v-model="form.category_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                            <option :value="null">Select Category</option>
+                            <option v-for="cat in categoryStore.categories" :key="cat.id" :value="cat.id">
+                                {{ cat.name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700">SKU</label>
                         <input v-model="form.sku" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
                     </div>
 
                      <div>
-                        <label class="block text-sm font-medium text-gray-700">Stock Quantity</label>
-                        <input v-model.number="form.stock_quantity" type="number" required min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                        <label class="block text-sm font-medium text-gray-700">Stock Quantity (Total)</label>
+                        <input v-if="form.variants.length === 0" v-model.number="form.stock_quantity" type="number" required min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                         <div v-else class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 sm:text-sm border p-2 text-gray-500">
+                             {{ form.variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0) }} (Sum of variants)
+                         </div>
                     </div>
 
                     <div>
@@ -49,6 +62,10 @@
                         <label class="block text-sm font-medium text-gray-700">Description (Optional)</label>
                         <textarea v-model="form.description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"></textarea>
                     </div>
+
+                    <div class="col-span-2 border-t pt-4 mt-2">
+                        <VariantBuilder v-model="form.variants" />
+                    </div>
                 </div>
 
                 <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded">
@@ -69,12 +86,15 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProductStore } from '../../stores/product';
+import { useCategoryStore } from '../../stores/category';
+import VariantBuilder from '../../components/products/VariantBuilder.vue';
 
 const router = useRouter();
 const store = useProductStore();
+const categoryStore = useCategoryStore();
 const loading = ref(false);
 const error = ref(null);
 
@@ -85,7 +105,14 @@ const form = reactive({
     base_price: 0,
     cost_price: 0,
     description: '',
-    is_active: true
+    is_active: true,
+    category_id: null,
+    variants: []
+});
+
+onMounted(async () => {
+    store.fetchProducts(); // Pre-load to avoid stale state? Not needed.
+    await categoryStore.fetchCategories();
 });
 
 const saveProduct = async () => {

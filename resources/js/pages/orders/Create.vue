@@ -31,6 +31,16 @@
                                     {{ p.name }} (Stock: {{ p.stock_quantity }})
                                 </option>
                             </select>
+                            
+                            <!-- Variant Selector -->
+                            <div v-if="getProductVariants(item.product_id).length > 0" class="mt-1">
+                                <select v-model="item.product_variant_id" class="block w-full border border-gray-300 rounded p-1 text-xs" @change="onVariantSelect(item)">
+                                    <option :value="null">Select Variant</option>
+                                    <option v-for="v in getProductVariants(item.product_id)" :key="v.id" :value="v.id">
+                                        {{ v.size }} / {{ v.color }} (Stock: {{ v.stock_quantity }}) <span v-if="v.extra_price > 0">(+{{ v.extra_price }})</span>
+                                    </option>
+                                </select>
+                            </div>
                         </div>
                         <div class="w-20">
                             <label class="text-xs text-gray-500">Qty</label>
@@ -109,7 +119,7 @@ const orderStore = useOrderStore();
 const customers = computed(() => customerStore.customers);
 const products = computed(() => productStore.products);
 
-const cart = ref([{ product_id: null, quantity: 1, unit_price: 0 }]);
+const cart = ref([{ product_id: null, product_variant_id: null, quantity: 1, unit_price: 0 }]);
 const form = reactive({
     customer_id: '',
     discount: 0,
@@ -123,15 +133,33 @@ onMounted(() => {
     productStore.fetchProducts();
 });
 
+const getProductVariants = (productId) => {
+    const product = products.value.find(p => p.id === productId);
+    return product ? (product.variants || []) : [];
+};
+
 const onProductSelect = (item) => {
+    item.product_variant_id = null; // Reset variant
     const product = products.value.find(p => p.id === item.product_id);
     if (product) {
-        item.unit_price = product.base_price; // Selling price
+        item.unit_price = product.base_price; 
     }
 };
 
+const onVariantSelect = (item) => {
+     const product = products.value.find(p => p.id === item.product_id);
+     if (product && item.product_variant_id) {
+         const variant = product.variants.find(v => v.id === item.product_variant_id);
+         if (variant) {
+             item.unit_price = Number(product.base_price) + Number(variant.extra_price || 0);
+         }
+     } else if (product) {
+          item.unit_price = product.base_price;
+     }
+};
+
 const addItem = () => {
-    cart.value.push({ product_id: null, quantity: 1, unit_price: 0 });
+    cart.value.push({ product_id: null, product_variant_id: null, quantity: 1, unit_price: 0 });
 };
 
 const removeItem = (index) => {
@@ -154,6 +182,7 @@ const submitOrder = async () => {
             customer_id: form.customer_id,
             items: cart.value.filter(i => i.product_id).map(i => ({
                 product_id: i.product_id,
+                product_variant_id: i.product_variant_id, // Add variant ID
                 quantity: i.quantity,
                 unit_price: i.unit_price
             })),

@@ -14,6 +14,7 @@ class Product extends Model
 
     protected $fillable = [
         'tenant_id',
+        'category_id',
         'name',
         'sku',
         'base_price',
@@ -25,5 +26,21 @@ class Product extends Model
     public function variants()
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Get the total stock quantity (sum of variants if they exist, otherwise raw column).
+     */
+    public function getTotalStockAttribute(): int
+    {
+        if ($this->variants()->exists()) {
+            return (int) $this->variants()->sum('stock_quantity');
+        }
+        return (int) $this->stock_quantity;
     }
 }

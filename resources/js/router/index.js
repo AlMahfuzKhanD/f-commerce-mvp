@@ -35,6 +35,11 @@ const routes = [
                 component: () => import('../pages/products/Index.vue') // Lazy load
             },
             {
+                path: 'categories',
+                name: 'Categories',
+                component: () => import('../pages/categories/Index.vue')
+            },
+            {
                 path: 'products/create',
                 name: 'CreateProduct',
                 component: () => import('../pages/products/Create.vue')
@@ -73,6 +78,11 @@ const routes = [
                 path: 'settings',
                 name: 'Settings',
                 component: () => import('../pages/Settings.vue')
+            },
+            {
+                path: 'attributes',
+                name: 'Attributes',
+                component: () => import('../pages/attributes/Index.vue')
             },
             {
                 path: 'suppliers',

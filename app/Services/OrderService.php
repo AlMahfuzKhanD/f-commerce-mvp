@@ -80,6 +80,8 @@ class OrderService
                 'order_source' => $data['order_source'],
                 'status' => 'pending', // Default
                 'notes' => $data['notes'] ?? null,
+                'shipping_address' => $data['shipping_address'] ?? null,
+                'shipping_phone' => $data['shipping_phone'] ?? null,
                 
                 // Financials
                 'subtotal' => $subtotal,
@@ -182,6 +184,8 @@ class OrderService
             if (isset($data['customer_id'])) $order->customer_id = $data['customer_id'];
             if (isset($data['order_date'])) $order->created_at = $data['order_date']; // Careful if casting
             if (isset($data['notes'])) $order->notes = $data['notes'];
+            if (isset($data['shipping_address'])) $order->shipping_address = $data['shipping_address'];
+            if (isset($data['shipping_phone'])) $order->shipping_phone = $data['shipping_phone'];
             if (isset($data['discount'])) $order->discount = $data['discount'];
             if (isset($data['delivery_charge'])) $order->delivery_charge = $data['delivery_charge'];
 

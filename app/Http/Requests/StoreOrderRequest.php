@@ -28,6 +28,8 @@ class StoreOrderRequest extends FormRequest
             'delivery_charge' => ['numeric', 'min:0'],
             'discount' => ['numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
+            'shipping_address' => ['nullable', 'string'],
+            'shipping_phone' => ['nullable', 'string'],
             
             // Items
             'items' => ['required', 'array', 'min:1'],

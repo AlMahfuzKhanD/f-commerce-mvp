@@ -8,9 +8,12 @@
                     <h1 class="text-2xl font-bold text-gray-900">
                         {{ $route.name }}
                     </h1>
-                    <button @click="handleLogout" class="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded">
-                        Logout
-                    </button>
+                     <div class="flex items-center space-x-4">
+                        <span class="text-gray-700 font-medium" v-if="auth.user">Hello, {{ auth.user.name }}</span>
+                        <button @click="handleLogout" class="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded border border-red-200">
+                            Logout
+                        </button>
+                    </div>
                 </div>
             </header>
             

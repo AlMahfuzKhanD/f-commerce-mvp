@@ -15,6 +15,8 @@ class Order extends Model
         'tenant_id',
         'customer_id',
         'order_number',
+        'shipping_address',
+        'shipping_phone',
         'status',
         'order_source',
         'subtotal',

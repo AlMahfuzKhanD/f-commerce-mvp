@@ -103,6 +103,8 @@ class OrderController extends Controller
             'order_date' => 'sometimes|date',
             'customer_id' => 'sometimes|exists:customers,id',
             'notes' => 'nullable|string',
+            'shipping_address' => 'nullable|string',
+            'shipping_phone' => 'nullable|string',
             'discount' => 'sometimes|numeric|min:0',
             'delivery_charge' => 'sometimes|numeric|min:0',
         ];

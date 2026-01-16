@@ -8,13 +8,19 @@
                 <!-- Customer Selection -->
                 <div class="bg-white p-4 rounded shadow">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Select Customer</label>
-                    <div class="flex space-x-2">
+                    <div class="flex space-x-2 mb-4">
                          <select v-model="form.customer_id" class="block w-full border border-gray-300 rounded-md p-2">
                             <option v-for="c in customers" :key="c.id" :value="c.id">
                                 {{ c.name }} ({{ c.phone }})
                             </option>
                         </select>
                     </div>
+
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Shipping Address</label>
+                    <textarea v-model="form.shipping_address" rows="2" class="block w-full border border-gray-300 rounded-md p-2 text-sm mb-2" placeholder="Enter alternate shipping address..."></textarea>
+                    
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Shipping Phone</label>
+                    <input v-model="form.shipping_phone" type="text" class="block w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="Enter alternate contact number...">
                 </div>
 
                 <!-- Products -->
@@ -192,6 +198,8 @@ const cart = ref([]);
 const form = reactive({
     order_number: '',
     customer_id: '',
+    shipping_address: '',
+    shipping_phone: '',
     discount: 0,
     delivery_charge: 0,
     order_source: 'manual'
@@ -215,6 +223,8 @@ onMounted(async () => {
             if (order) {
                 form.order_number = order.order_number;
                 form.customer_id = order.customer_id;
+                form.shipping_address = order.shipping_address;
+                form.shipping_phone = order.shipping_phone;
                 form.discount = Number(order.discount || 0);
                 form.delivery_charge = Number(order.delivery_charge || 0);
                 form.order_source = order.order_source || 'manual';
@@ -362,6 +372,8 @@ const updateOrder = async () => {
             })),
             discount: form.discount,
             delivery_charge: form.delivery_charge,
+            shipping_address: form.shipping_address,
+            shipping_phone: form.shipping_phone,
             order_source: form.order_source
         };
         

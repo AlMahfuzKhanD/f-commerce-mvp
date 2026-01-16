@@ -30,14 +30,26 @@
             </div>
         </div>
 
-        <!-- Bill To -->
+        <!-- Bill To & Ship To -->
         <div class="p-8 grid grid-cols-2 gap-8">
             <div>
                 <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Bill To</h3>
                 <div class="text-gray-700">
                     <p class="font-bold text-lg text-gray-900">{{ order.customer?.name }}</p>
-                    <p class="text-sm mt-1" v-if="order.customer?.phone">{{ order.customer?.phone }}</p>
+                    <p class="text-sm mt-1 mb-1" v-if="order.customer?.phone">{{ order.customer?.phone }}</p>
                     <p class="text-sm mt-1 whitespace-pre-line" v-if="order.customer?.address">{{ order.customer?.address }}</p>
+                </div>
+            </div>
+             <div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Ship To</h3>
+                <div class="text-gray-700">
+                    <p class="font-bold text-lg text-gray-900">{{ order.customer?.name }}</p>
+                    
+                    <p class="text-sm mt-1 mb-1" v-if="order.shipping_phone">{{ order.shipping_phone }}</p>
+                    <p class="text-sm mt-1 mb-1" v-else-if="order.customer?.phone">{{ order.customer?.phone }}</p>
+
+                    <p class="text-sm mt-1 whitespace-pre-line" v-if="order.shipping_address">{{ order.shipping_address }}</p>
+                    <p class="text-sm mt-1 whitespace-pre-line" v-else-if="order.customer?.address">{{ order.customer?.address }}</p>
                 </div>
             </div>
         </div>

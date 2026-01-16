@@ -18,6 +18,14 @@ class OrderResource extends JsonResource
             'delivery_charge' => (float) $this->delivery_charge,
             'order_source' => $this->order_source,
             'customer_name' => $this->whenLoaded('customer', fn() => optional($this->customer)->name ?? 'Walk-in Customer'),
+            'customer' => $this->whenLoaded('customer', function() {
+                return [
+                    'id' => $this->customer->id,
+                    'name' => $this->customer->name,
+                    'phone' => $this->customer->phone,
+                    'address' => $this->customer->address,
+                ];
+            }),
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'total_amount' => (float) $this->total_amount,
             'paid_amount' => (float) ($this->relationLoaded('payments') ? $this->payments->sum('amount') : 0),
@@ -30,6 +38,8 @@ class OrderResource extends JsonResource
                 'total' => (float) $this->total_amount,
             ],
             'notes' => $this->notes,
+            'shipping_address' => $this->shipping_address,
+            'shipping_phone' => $this->shipping_phone,
             'created_at' => $this->created_at->toIso8601String(),
             'created_at_human' => $this->created_at->format('M d, Y'),
         ];

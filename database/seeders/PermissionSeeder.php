@@ -39,6 +39,26 @@ class PermissionSeeder extends Seeder
             // Settings
             ['slug' => 'settings.view', 'group' => 'settings', 'description' => 'View tenant settings'],
             ['slug' => 'settings.update', 'group' => 'settings', 'description' => 'Update tenant settings'],
+
+            // Dashboard
+            ['slug' => 'dashboard.view', 'group' => 'dashboard', 'description' => 'View dashboard'],
+
+            // Purchases
+            ['slug' => 'purchase.view', 'group' => 'purchases', 'description' => 'View purchases'],
+            ['slug' => 'purchase.create', 'group' => 'purchases', 'description' => 'Create new purchases'],
+            ['slug' => 'purchase.update', 'group' => 'purchases', 'description' => 'Update purchases'],
+            ['slug' => 'purchase.delete', 'group' => 'purchases', 'description' => 'Delete purchases'],
+
+            // Suppliers
+            ['slug' => 'supplier.view', 'group' => 'suppliers', 'description' => 'View suppliers'],
+            ['slug' => 'supplier.create', 'group' => 'suppliers', 'description' => 'Create new suppliers'],
+            ['slug' => 'supplier.update', 'group' => 'suppliers', 'description' => 'Update suppliers'],
+            ['slug' => 'supplier.delete', 'group' => 'suppliers', 'description' => 'Delete suppliers'],
+
+             // Expenses
+            ['slug' => 'expense.view', 'group' => 'expenses', 'description' => 'View expenses'],
+            ['slug' => 'expense.create', 'group' => 'expenses', 'description' => 'Create new expenses'],
+            ['slug' => 'expense.delete', 'group' => 'expenses', 'description' => 'Delete expenses'],
         ];
 
         foreach ($permissions as $perm) {

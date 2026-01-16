@@ -11,6 +11,11 @@ export const useAuthStore = defineStore('auth', {
 
     getters: {
         isAuthenticated: (state) => !!state.token,
+        can: (state) => (permission) => {
+            if (!state.user || !state.user.all_permissions) return false;
+            if (state.user.all_permissions.includes('*')) return true;
+            return state.user.all_permissions.includes(permission);
+        }
     },
 
     actions: {
@@ -62,7 +67,7 @@ export const useAuthStore = defineStore('auth', {
             if (!this.token) return;
             try {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
-                constresponse = await axios.get('/api/v1/auth/me');
+                const response = await axios.get('/api/v1/auth/me');
                 this.user = response.data.data;
             } catch (error) {
                 this.logout();

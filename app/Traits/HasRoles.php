@@ -58,11 +58,30 @@ trait HasRoles
         return $this->roles->contains('name', $roleName);
     }
 
-    /**
-     * Assign a role to the user.
-     */
     public function assignRole(Role $role): void
     {
         $this->roles()->syncWithoutDetaching($role);
+    }
+
+    /**
+     * Get all unique permissions slug for the user.
+     */
+    public function getAllPermissionsAttribute(): array
+    {
+        // 1. If Owner, return all permissions (wildcard)
+        if ($this->hasRole('Owner')) {
+             return ['*'];
+        }
+        
+        // 2. Direct permissions
+        $permissions = $this->permissions->pluck('slug')->toArray();
+        
+        // 3. Role permissions
+        foreach ($this->roles as $role) {
+             $rolePerms = $role->permissions->pluck('slug')->toArray();
+             $permissions = array_merge($permissions, $rolePerms);
+        }
+        
+        return array_unique($permissions);
     }
 }

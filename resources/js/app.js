@@ -12,4 +12,10 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 
+import { useAuthStore } from './stores/auth';
+app.config.globalProperties.$can = (permission) => {
+    const auth = useAuthStore();
+    return auth.can(permission);
+};
+
 app.mount('#app');

@@ -69,6 +69,11 @@ Route::prefix('v1')->group(function () {
         // Delivery
         Route::get('orders/{id}/delivery', [\App\Http\Controllers\Api\v1\DeliveryController::class, 'show']);
         Route::post('orders/{id}/delivery', [\App\Http\Controllers\Api\v1\DeliveryController::class, 'store']);
+
+        // Users & Roles
+        Route::apiResource('users', \App\Http\Controllers\Api\v1\UserController::class);
+        Route::apiResource('roles', \App\Http\Controllers\Api\v1\RoleController::class);
+        Route::get('permissions', [\App\Http\Controllers\Api\v1\PermissionController::class, 'index']);
     });
 
 

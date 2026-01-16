@@ -5,39 +5,39 @@
         </div>
         <div class="flex flex-col flex-1 overflow-y-auto">
             <nav class="flex-1 px-2 py-4 bg-gray-800 space-y-1">
-                <router-link to="/dashboard" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('dashboard.view')" to="/dashboard" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">📊</span> Dashboard
                 </router-link>
-                <router-link to="/orders" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('order.view')" to="/orders" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">📦</span> Orders
                 </router-link>
-                <router-link to="/products" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('product.view')" to="/products" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">👕</span> Products
                 </router-link>
-                <router-link to="/categories" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('product.view')" to="/categories" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">📂</span> Categories
                 </router-link>
-                <router-link to="/customers" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('customer.view')" to="/customers" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">👥</span> Customers
                 </router-link>
                 
-                <div class="px-4 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <div v-if="$can('supplier.view') || $can('purchase.view') || $can('expense.view')" class="px-4 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Sourcing
                 </div>
-                <router-link to="/suppliers" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('supplier.view')" to="/suppliers" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">🏭</span> Suppliers
                 </router-link>
-                <router-link to="/purchases" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('purchase.view')" to="/purchases" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">🛒</span> Purchases
                 </router-link>
-                <router-link to="/expenses" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('expense.view')" to="/expenses" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">💸</span> Expenses
                 </router-link>
                 
-                <div class="px-4 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <div v-if="$can('settings.view')" class="px-4 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Analytics
                 </div>
-                <router-link to="/reports" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('settings.view')" to="/reports" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">📈</span> Reports
                 </router-link>
                 
@@ -46,10 +46,10 @@
                 <router-link to="/profile" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">👤</span> Profile
                 </router-link>
-                <router-link to="/attributes" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('product.view')" to="/attributes" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">🏷️</span> Attributes
                 </router-link>
-                <router-link to="/settings" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
+                <router-link v-if="$can('settings.view')" to="/settings" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md" active-class="bg-gray-900 text-white">
                     <span class="mr-3">⚙️</span> Settings
                 </router-link>
             </nav>

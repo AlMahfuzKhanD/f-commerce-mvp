@@ -73,4 +73,19 @@ class SupplierController extends Controller
 
         return response()->json(['message' => 'Supplier updated successfully', 'data' => $supplier]);
     }
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $supplier = Supplier::findOrFail($id);
+
+        if ($supplier->purchases()->exists()) {
+            return response()->json(['message' => 'Cannot delete supplier because they have linked purchases.'], 422);
+        }
+
+        $supplier->delete();
+
+        return response()->json(['message' => 'Supplier deleted successfully']);
+    }
 }

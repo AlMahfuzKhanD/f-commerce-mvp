@@ -190,8 +190,20 @@ const routes = [
                 name: 'CreatePermission',
                 component: () => import('../pages/permissions/Create.vue'),
                 meta: { permission: 'settings.update' }
+            {
+                path: 'permissions/create',
+                name: 'CreatePermission',
+                component: () => import('../pages/permissions/Create.vue'),
+                meta: { permission: 'settings.update' }
             }
         ]
+    },
+    // Print Routes (Outside Dashboard Layout for clean print)
+    {
+        path: '/print/bulk/:type',
+        name: 'BulkPrint',
+        component: () => import('../pages/print/BulkPrint.vue'),
+        meta: { requiresAuth: true }
     },
     {
         path: '/:pathMatch(.*)*',

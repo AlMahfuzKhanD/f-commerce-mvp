@@ -53,6 +53,14 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     SL
                                 </th>
+                                <th v-if="selectable" class="px-6 py-3 border-b text-left bg-gray-50">
+                                   <input 
+                                        type="checkbox" 
+                                        :checked="isAllSelected"
+                                        @change="toggleSelectAll"
+                                        class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 h-4 w-4"
+                                    >
+                                </th>
                                 <th v-for="header in headers" :key="header.key" scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {{ header.label }}
                                 </th>
@@ -66,7 +74,19 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ calculateSerial(index) }}
                                 </td>
-                                <td v-for="header in headers" :key="header.key" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td v-if="selectable" class="px-6 py-4 whitespace-nowrap border-b border-gray-100">
+                                    <input 
+                                        type="checkbox" 
+                                        :value="item.id"
+                                        v-model="selectedItems"
+                                        class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 h-4 w-4"
+                                    >
+                                </td>
+                                <td 
+                                    v-for="header in headers" 
+                                    :key="header.key"
+                                    class="px-6 py-4 whitespace-nowrap border-b border-gray-100 text-sm text-gray-700"
+                                >            
                                     <slot :name="header.key" :item="item" :index="index">
                                         {{ item[header.key] }}
                                     </slot>
@@ -152,7 +172,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, computed } from 'vue';
 
 const props = defineProps({
     headers: {
@@ -182,15 +202,42 @@ const props = defineProps({
     title: {
         type: String,
         default: ''
+    },
+    selectable: {
+        type: Boolean,
+        default: false
+    },
+    modelValue: { // For selection
+        type: Array,
+        default: () => []
     }
 });
 
-const emit = defineEmits(['update:search', 'update:page']);
+const emit = defineEmits(['update:search', 'update:page', 'update:modelValue']);
+
+// Selection Logic
+const selectedItems = computed({
+    get: () => props.modelValue,
+    set: (val) => emit('update:modelValue', val)
+});
+
+const isAllSelected = computed(() => {
+    return props.items.length > 0 && selectedItems.value.length === props.items.length;
+});
+
+const toggleSelectAll = (e) => {
+    if (e.target.checked) {
+        selectedItems.value = props.items.map(item => item.id);
+    } else {
+        selectedItems.value = [];
+    }
+};
+
+const currentPage = computed(() => props.meta.current_page || 1);
 
 const calculateSerial = (index) => {
     if (!props.meta) return index + 1;
     const perPage = props.meta.per_page || 15;
-    const currentPage = props.meta.current_page || 1;
-    return (currentPage - 1) * perPage + index + 1;
+    return (currentPage.value - 1) * perPage + index + 1;
 };
 </script>

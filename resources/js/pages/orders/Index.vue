@@ -14,6 +14,9 @@
                 :meta="store.pagination"
                 :loading="store.loading"
                 :actions="true"
+                :selectable="true"
+                v-model="selectedIds"
+                title="Orders"
                 v-model:search="search"
                 @update:search="handleSearch"
                 @update:page="handlePageChange"
@@ -90,6 +93,12 @@
 
         <PaymentModal v-model="showPayment" :order="selectedOrder" @payment-success="refresh" />
         <DeliveryModal v-model="showDelivery" :order="selectedOrder" @saved="refresh" />
+        <BulkActionTray 
+            :count="selectedIds.length"
+            @print-invoice="printBulk('invoice')"
+            @print-stickers="printBulk('stickers')"
+            @cancel="selectedIds = []"
+        />
     </div>
 </template>
 
@@ -99,6 +108,7 @@ import { useOrderStore } from '../../stores/order';
 import ServerDataTable from '../../components/ui/ServerDataTable.vue';
 import PaymentModal from '../../components/PaymentModal.vue';
 import DeliveryModal from '../../components/DeliveryModal.vue';
+import BulkActionTray from '../../components/BulkActionTray.vue';
 import { debounce } from 'lodash'; 
 import Swal from 'sweetalert2';
 import toastr from 'toastr';
@@ -109,6 +119,7 @@ const showDelivery = ref(false);
 const selectedOrder = ref(null);
 const search = ref('');
 const statusFilter = ref('');
+const selectedIds = ref([]);
 
 const headers = [
     { key: 'order_number', label: 'Order #' },
@@ -269,5 +280,13 @@ const refresh = () => {
 const updateStatusWithClose = async (id, status) => {
     openDropdownId.value = null;
     await updateStatus(id, status);
+};
+
+const printBulk = (type) => {
+    if (selectedIds.value.length === 0) return;
+    const ids = selectedIds.value.join(',');
+    // Open in new tab (Mock for now)
+    const url = `/print/bulk/${type}?ids=${ids}`;
+    window.open(url, '_blank');
 };
 </script>

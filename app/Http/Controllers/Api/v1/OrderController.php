@@ -30,6 +30,9 @@ class OrderController extends Controller
         // Filter by Status
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
+        } else {
+            // Default: Exclude drafts from main list
+            $query->where('status', '!=', 'draft');
         }
 
         // Search by Order Number or Customer Name

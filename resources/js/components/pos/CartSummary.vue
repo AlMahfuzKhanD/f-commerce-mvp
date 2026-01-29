@@ -83,7 +83,15 @@
             </div>
 
             <button 
-                @click="$emit('submit')"
+                @click="$emit('submit', 'draft')"
+                :disabled="cartItems.length === 0 || !canSubmit"
+                class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg shadow-sm transition-all mb-2 flex items-center justify-center"
+            >
+                <span class="mr-2">💾</span> Save as Draft
+            </button>
+
+            <button 
+                @click="$emit('submit', 'new')"
                 :disabled="cartItems.length === 0 || !canSubmit"
                 class="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-bold py-3 rounded-lg shadow-md transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >

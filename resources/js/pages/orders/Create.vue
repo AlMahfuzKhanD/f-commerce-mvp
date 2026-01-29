@@ -187,11 +187,12 @@ const total = computed(() => {
 });
 
 // --- Submit Logic ---
-const submitOrder = async () => {
+const submitOrder = async (status = 'new') => {
     error.value = null;
     try {
         const payload = {
             customer_id: form.customer_id,
+            status: status === 'draft' ? 'draft' : 'pending', // 'new' in generic terms, mapping to 'pending' for active orders
             items: cart.value.map(i => ({
                 product_id: i.product_id,
                 product_variant_id: i.product_variant_id,

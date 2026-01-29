@@ -22,6 +22,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'customer_id' => ['required', 'exists:customers,id'],
             'order_source' => ['required', 'string', 'in:manual,facebook,whatsapp,phone'],
+            'status' => ['nullable', 'string', 'in:new,pending,confirmed,shipped,delivered,cancelled,returned,draft'],
             'order_date' => ['nullable', 'date'],
             
             // Financials

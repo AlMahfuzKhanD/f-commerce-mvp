@@ -7,6 +7,21 @@
             </router-link>
         </div>
 
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500">
+                <li class="mr-2">
+                    <a href="#" @click.prevent="setStatusFilter('')" :class="{'border-b-2 border-indigo-600 text-indigo-600': statusFilter !== 'draft', 'border-transparent hover:text-gray-600 hover:border-gray-300': statusFilter === 'draft'}" class="inline-block p-4 rounded-t-lg group">
+                        All Orders
+                    </a>
+                </li>
+                <li class="mr-2">
+                     <a href="#" @click.prevent="setStatusFilter('draft')" :class="{'border-b-2 border-indigo-600 text-indigo-600': statusFilter === 'draft', 'border-transparent hover:text-gray-600 hover:border-gray-300': statusFilter !== 'draft'}" class="inline-block p-4 rounded-t-lg group">
+                        <span class="mr-2">📝</span> Drafts
+                    </a>
+                </li>
+            </ul>
+        </div>
+
         <div class="bg-white rounded-lg shadow">
             <ServerDataTable 
                 :headers="headers" 
@@ -70,16 +85,16 @@
                                 <div class="border-t border-gray-100 my-1"></div>
 
                                 <!-- Restricted Edit/Delete -->
-                                <router-link v-if="['pending', 'new'].includes(item.status)" :to="{ name: 'EditOrder', params: { id: item.id } }" class="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50">Edit Order</router-link>
-                                <button v-if="['pending', 'new'].includes(item.status)" @click="confirmDelete(item.id)" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete Order</button>
+                                <router-link v-if="['pending', 'new', 'draft'].includes(item.status)" :to="{ name: 'EditOrder', params: { id: item.id } }" class="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50">Edit Order</router-link>
+                                <button v-if="['pending', 'new', 'draft'].includes(item.status)" @click="confirmDelete(item.id)" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete Order</button>
                             </div>
                         </div>
                     </div>
                 </template>
                 
                 <template #filters>
-                     <select v-model="statusFilter" @change="handleSearch" class="border rounded-lg text-gray-700 py-2 px-3 focus:outline-none focus:border-indigo-500">
-                        <option value="">All Status</option>
+                     <select v-if="statusFilter !== 'draft'" v-model="statusFilter" @change="handleSearch" class="border rounded-lg text-gray-700 py-2 px-3 focus:outline-none focus:border-indigo-500">
+                        <option value="">Filter by Status</option>
                         <option value="pending">Received (Pending)</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="shipped">Shipped</option>
@@ -141,10 +156,16 @@ const statusClass = (status) => {
         case 'returned': return 'bg-orange-100 text-orange-800 border-orange-200';
         case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
         case 'paid': return 'bg-green-100 text-green-800 border-green-200';
-        case 'partial': return 'bg-orange-100 text-orange-800 border-orange-200';
         case 'unpaid': return 'bg-red-100 text-red-800 border-red-200';
+        case 'draft': return 'bg-gray-200 text-gray-800 border-gray-300 border-dashed';
         default: return 'bg-gray-100 text-gray-800';
     }
+};
+
+const setStatusFilter = (status) => {
+    statusFilter.value = status;
+    search.value = ''; // Clear search when switching tabs
+    fetchData(1);
 };
 
 const fetchData = (page = 1) => {

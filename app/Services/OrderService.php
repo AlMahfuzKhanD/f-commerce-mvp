@@ -78,7 +78,7 @@ class OrderService
                 'customer_id' => $data['customer_id'],
                 'order_number' => $orderNumber,
                 'order_source' => $data['order_source'],
-                'status' => 'pending', // Default
+                'status' => $data['status'] ?? 'pending', 
                 'notes' => $data['notes'] ?? null,
                 'shipping_address' => $data['shipping_address'] ?? null,
                 'shipping_phone' => $data['shipping_phone'] ?? null,
@@ -104,7 +104,7 @@ class OrderService
                 'event_type' => 'status_change',
                 'meta' => [
                     'old_status' => null,
-                    'new_status' => 'pending',
+                    'new_status' => $data['status'] ?? 'pending',
                     'action' => 'created'
                 ]
             ]);

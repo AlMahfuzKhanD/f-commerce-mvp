@@ -104,48 +104,77 @@
 
             <!-- STICKER MODE -->
             <div v-else-if="type === 'stickers'" class="flex flex-wrap content-start p-4 gap-4 bg-gray-200 print:bg-white print:p-0 print:block">
-                 <div v-for="order in orders" :key="order.id" class="bg-white w-[100mm] h-[150mm] p-6 border shadow-sm print:shadow-none relative flex flex-col justify-between print:break-after-page sticker-card mx-auto mb-4 print:mb-0">
+                 <div v-for="order in orders" :key="order.id" class="bg-white w-[100mm] h-[150mm] border-2 border-black relative flex flex-col print:break-after-page sticker-card mx-auto mb-4 print:mb-0 text-black box-border overflow-hidden">
                     
-                    <!-- Header -->
-                    <div class="text-center border-b pb-4">
-                         <h2 class="text-2xl font-black uppercase tracking-wide">F-Commerce</h2>
-                         <p class="font-bold text-gray-600">Order #{{ order.order_number }}</p>
-                         <p class="text-xs text-gray-400">{{ formatDate(order.created_at) }}</p>
+                    <!-- Top Section: Sender & Date -->
+                    <div class="flex justify-between items-start border-b-2 border-black p-2 bg-gray-50 print:bg-white">
+                        <div class="text-xs leading-tight">
+                            <span class="font-bold uppercase block mb-1">Sender:</span>
+                            <span class="font-bold block">F-Commerce Store</span>
+                            <span class="block">123 Merul Badda, Dhaka</span>
+                            <span class="block">Bob's Plaza, Level 4</span>
+                            <span class="block">Phone: 01700-000000</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="border border-black px-2 py-1 mb-1 bg-white">
+                                <span class="font-bold text-sm block">STANDARD</span>
+                            </div>
+                            <span class="text-xs font-mono block">{{ formatDate(order.created_at) }}</span>
+                        </div>
                     </div>
 
-                    <!-- Customer Info (BIG) -->
-                    <div class="flex-1 flex flex-col justify-center items-center text-center py-4">
-                        <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Deliver To</p>
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2 leading-tight">
-                            {{ order.customer?.name }}
-                        </h1>
-                        <p class="text-2xl font-bold text-gray-800 mb-4 bg-gray-100 px-4 py-1 rounded">
-                             {{ order.shipping_phone || order.customer?.phone }}
-                        </p>
-                        <p class="text-lg text-gray-700 px-8 leading-snug">
-                            {{ order.shipping_address || order.customer?.address }}
-                        </p>
+                    <!-- Middle Section: Recipient -->
+                    <div class="p-4 flex-1 flex flex-col justify-center border-b-2 border-black relative">
+                        <span class="text-xs font-bold uppercase text-gray-500 absolute top-2 left-2">Deliver To:</span>
+                        
+                        <div class="pl-2">
+                            <h1 class="text-2xl font-bold mb-1 uppercase truncate">{{ order.customer?.name }}</h1>
+                            <p class="text-lg leading-snug font-medium mb-3 pr-2 break-words">
+                                {{ order.shipping_address || order.customer?.address }}
+                            </p>
+                            <div class="inline-block bg-black text-white px-3 py-1 font-bold text-xl rounded-sm">
+                                📞 {{ order.shipping_phone || order.customer?.phone }}
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Footer Details -->
-                    <div class="border-t pt-4">
-                         <div class="grid grid-cols-2 gap-4 text-sm">
-                             <div>
-                                 <span class="block text-gray-500 text-xs uppercase">COD Amount</span>
-                                 <span class="block text-xl font-black">{{ order.due_amount }} Tk</span>
-                             </div>
-                              <div class="text-right">
-                                 <span class="block text-gray-500 text-xs uppercase">Weight / Qty</span>
-                                 <span class="block font-bold">0.5 kg</span>
-                             </div>
+                    <!-- Order Details & Weight -->
+                    <div class="flex border-b-2 border-black h-16">
+                        <div class="w-1/2 border-r-2 border-black p-2">
+                             <span class="text-[10px] uppercase font-bold text-gray-500 block">Order Reference</span>
+                             <span class="text-lg font-bold block">#{{ order.order_number }}</span>
+                             <span class="text-xs block text-gray-600 truncate">Items: {{ order.items?.length || 1 }}</span>
+                        </div>
+                        <div class="w-1/4 border-r-2 border-black p-2 text-center">
+                            <span class="text-[10px] uppercase font-bold text-gray-500 block">Weight</span>
+                            <span class="text-lg font-bold block">0.5 <span class="text-sm">KG</span></span>
+                        </div>
+                         <div class="w-1/4 p-2 text-center">
+                            <span class="text-[10px] uppercase font-bold text-gray-500 block">Zone</span>
+                            <span class="text-xl font-bold block">DHK</span>
+                        </div>
+                    </div>
+
+                    <!-- COD Section (Critical) -->
+                    <div class="border-b-2 border-black p-4 text-center bg-gray-50 print:bg-white">
+                        <span class="text-xs font-bold uppercase tracking-widest block mb-1">Cash On Delivery (COD) Amount</span>
+                        <div class="text-4xl font-black">{{ Math.round(order.due_amount) }} <span class="text-lg align-top">TK</span></div>
+                         <span class="text-[10px] uppercase block mt-1 text-gray-500 text-center">(Condition)</span>
+                    </div>
+
+                    <!-- Footer: Instructions & Barcode -->
+                    <div class="flex flex-col justify-between p-2 h-24">
+                        <div class="text-xs italic text-gray-600 mb-2 px-1">
+                             <span class="font-bold not-italic text-black">Note:</span> 
+                             Call customer before delivery. If unreachable, try SMS.
+                        </div>
+                        
+                        <!-- Pseudo Barcode -->
+                         <div class="flex flex-col items-center justify-center flex-1 w-full overflow-hidden">
+                             <div class="h-8 w-64 bg-repeat-x" style="background-image: repeating-linear-gradient(90deg, black 0, black 2px, transparent 2px, transparent 4px);"></div>
+                             <span class="text-[10px] font-mono tracking-widest mt-1">{{ order.order_number }}</span>
                          </div>
-                         <div class="mt-4 text-center">
-                            <!-- Barcode Placeholder -->
-                             <div class="h-10 bg-black w-3/4 mx-auto"></div>
-                             <p class="text-[10px] mt-1 text-gray-400">Courier Tracking ID</p>
-                         </div>
                     </div>
-
                  </div>
             </div>
         </div>

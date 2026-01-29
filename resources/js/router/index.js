@@ -190,11 +190,6 @@ const routes = [
                 name: 'CreatePermission',
                 component: () => import('../pages/permissions/Create.vue'),
                 meta: { permission: 'settings.update' }
-            {
-                path: 'permissions/create',
-                name: 'CreatePermission',
-                component: () => import('../pages/permissions/Create.vue'),
-                meta: { permission: 'settings.update' }
             }
         ]
     },

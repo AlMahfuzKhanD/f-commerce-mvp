@@ -5,14 +5,12 @@
             :items="permissions"
             :loading="loading"
             :actions="true"
+            title="Permissions"
         >
             <template #filters>
-                <div class="flex items-center justify-between w-full">
-                     <h2 class="text-xl font-semibold text-gray-800">Permissions</h2>
-                     <router-link to="/permissions/create" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                        + Create Permission
-                    </router-link>
-                </div>
+                 <router-link to="/permissions/create" class="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 font-medium transition-colors whitespace-nowrap">
+                    + Create Permission
+                </router-link>
             </template>
 
             <template #actions="{ item }">

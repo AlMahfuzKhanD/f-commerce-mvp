@@ -5,21 +5,19 @@
             :items="roles"
             :loading="loading"
             :actions="true"
+            title="Roles"
         >
             <template #filters>
-                <div class="flex items-center justify-between w-full">
-                     <h2 class="text-xl font-semibold text-gray-800">Roles</h2>
-                     <router-link to="/roles/create" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                        + Create Role
-                    </router-link>
-                </div>
+                 <router-link to="/roles/create" class="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 font-medium transition-colors whitespace-nowrap">
+                    + Create Role
+                </router-link>
             </template>
 
             <template #actions="{ item }">
                 <button 
                     v-if="$can('settings.update')"
                     @click="$router.push({ name: 'EditRole', params: { id: item.id } })" 
-                    class="text-indigo-600 hover:text-indigo-900 mr-3 border border-indigo-600 rounded px-2 text-xs inline-block py-0.5"
+                    class="text-primary-600 hover:text-primary-900 mr-3 border border-primary-600 rounded px-2 text-xs inline-block py-0.5"
                 >
                     Edit
                 </button>
